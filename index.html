@@ -1,0 +1,4160 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Master - Luyện Thi Trắc Nghiệm</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --secondary-color: #10b981;
+            --error-color: #ef4444;
+            --background-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .app-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .app-header p {
+            color: var(--text-secondary);
+        }
+
+        /* Screens */
+        .screen {
+            transition: opacity 0.3s ease;
+        }
+
+        .screen.hidden {
+            display: none;
+            opacity: 0;
+        }
+
+        .screen.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Module Grid */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .module-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid var(--border-color);
+        }
+
+        .module-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-color);
+        }
+
+        .module-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .module-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Quiz Screen */
+        .quiz-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            color: var(--text-secondary);
+            transition: background 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-main);
+        }
+
+        .progress-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        #question-counter {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        /* Question Card */
+        .question-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+        }
+
+        .question-content {
+            margin-bottom: 2rem;
+        }
+
+        .question-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* Options */
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .option-item:hover:not(.disabled) {
+            background-color: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        .option-item.selected {
+            border-color: var(--primary-color);
+            background-color: #eef2ff;
+        }
+
+        .option-item.correct {
+            border-color: var(--secondary-color);
+            background-color: #ecfdf5;
+        }
+
+        .option-item.incorrect {
+            border-color: var(--error-color);
+            background-color: #fef2f2;
+        }
+
+        .option-marker {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #9ca3af;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #6b7280;
+        }
+
+        .option-item.selected .option-marker {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .option-item.correct .option-marker {
+            border-color: var(--secondary-color);
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+        }
+
+        .option-item.incorrect .option-marker {
+            border-color: var(--error-color);
+            background: var(--error-color);
+            color: white;
+            border: none;
+        }
+
+        .option-text {
+            font-size: 1rem;
+        }
+
+        /* Feedback Area */
+        .feedback-area {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border-radius: var(--radius);
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .feedback-area.hidden {
+            display: none;
+        }
+
+        .feedback-area.correct {
+            background-color: #ecfdf5;
+            border: 1px solid #a7f3d0;
+        }
+
+        .feedback-area.incorrect {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+
+        .feedback-icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .feedback-area.correct .feedback-icon::before {
+            content: "✓";
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .feedback-area.incorrect .feedback-icon::before {
+            content: "✕";
+            color: var(--error-color);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .feedback-text h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .feedback-area.correct h4 {
+            color: var(--secondary-color);
+        }
+
+        .feedback-area.incorrect h4 {
+            color: var(--error-color);
+        }
+
+        .feedback-text p {
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        /* Action Area */
+        .action-area {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .primary-btn,
+        .secondary-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .primary-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .primary-btn:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .primary-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .secondary-btn {
+            background-color: white;
+            border: 2px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .secondary-btn:hover {
+            border-color: var(--text-main);
+            background-color: #f9fafb;
+        }
+
+        /* Layout */
+        .quiz-layout {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .sidebar {
+            width: 300px;
+            /* Slightly wider for calendar */
+            flex-shrink: 0;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            overflow-y: auto;
+            /* Scroll whole sidebar */
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-section {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-section:last-child {
+            border-bottom: none;
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            background: #f9fafb;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .part-list {
+            /* Remove flex: 1 so it doesn't push calendar down */
+            padding: 0;
+        }
+
+        .part-item {
+            padding: 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .part-item:last-child {
+            border-bottom: none;
+        }
+
+        .part-item:hover {
+            background: #f3f4f6;
+        }
+
+        .part-item.active {
+            background: #eef2ff;
+            border-left-color: var(--primary-color);
+        }
+
+        .part-item h4 {
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .part-item p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .question-area {
+            flex: 1;
+            min-width: 0;
+            /* Prevent overflow */
+        }
+
+        /* Calendar Styles */
+        .calendar-container {
+            padding: 1rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+        }
+
+        .calendar-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            border-radius: 8px;
+            /* Softer corners */
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .calendar-item:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        .calendar-item.active {
+            border-color: var(--primary-color);
+            background: white;
+            color: var(--primary-color);
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .calendar-item.correct {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .calendar-item.incorrect {
+            background: var(--error-color);
+            color: white;
+            border-color: var(--error-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .quiz-layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+                max-height: none;
+            }
+
+            .calendar-grid {
+                grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <main>
+            <!-- Module Selection Screen -->
+            <section id="module-selection" class="screen active">
+                <div class="container">
+                    <header class="main-header">
+                        <h1>Hệ thống ôn tập kiến thức hiệu quả</h1>
+                        <p>Chọn học phần để bắt đầu</p>
+                    </header>
+                    <div class="module-grid">
+                        <!-- Modules will be injected here by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quiz Screen -->
+            <section id="quiz-screen" class="screen hidden">
+                <div class="quiz-header">
+                    <button id="back-btn" class="icon-btn" title="Quay lại">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                        <span>Quay lại</span>
+                    </button>
+                </div>
+
+                <div class="quiz-layout">
+                    <!-- Left Sidebar: Parts & Calendar -->
+                    <aside class="sidebar">
+                        <!-- Section 1: Parts -->
+                        <div class="sidebar-section">
+                            <div class="sidebar-header">Danh sách phần</div>
+                            <div class="part-list" id="part-list">
+                                <!-- Parts injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Calendar -->
+                        <div class="sidebar-section">
+                            <div class="sidebar-header">Danh sách câu hỏi</div>
+                            <div class="calendar-container">
+                                <div class="calendar-grid" id="calendar-grid">
+                                    <!-- Grid items injected here -->
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Center: Question -->
+                    <div class="question-area">
+                        <div class="question-card">
+                            <div class="question-content">
+                                <h3 id="question-text">Đang tải câu hỏi...</h3>
+                            </div>
+
+                            <div class="options-container" id="options-container">
+                                <!-- Options injected here -->
+                            </div>
+
+                            <div class="feedback-area hidden" id="feedback-area">
+                                <div class="feedback-icon" id="feedback-icon"></div>
+                                <div class="feedback-text">
+                                    <h4 id="feedback-title">Chính xác!</h4>
+                                    <p id="feedback-explanation"></p>
+                                </div>
+                            </div>
+
+                            <div class="action-area">
+                                <button id="check-btn" class="primary-btn" disabled>Kiểm tra</button>
+                                <button id="next-btn" class="secondary-btn hidden">Câu tiếp theo</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Data Script -->
+    <script>
+        const quizData = [
+            {
+                "id": "1",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Dữ liệu thô là?",
+                "options": {
+                    "A": "Dữ liệu đã được xử lý và có ý nghĩa\t",
+                    "B": "Dữ liệu mang tính tổng hợp và suy luận",
+                    "C": "Các sự kiện, con số, ký hiệu chưa được xử lý",
+                    "D": "Các bảng thông tin trong Excel"
+                },
+                "correct": "C",
+                "explanation": "Các sự kiện, con số, ký hiệu chưa được xử lý"
+            },
+            {
+                "id": "2",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Ví dụ nào dưới đây là dữ liệu thô?",
+                "options": {
+                    "A": "“Sinh viên A đạt 8.5 môn Toán”",
+                    "B": "“25.000”, “áo thun”, “Hà Nội”",
+                    "C": "“Dựa trên điểm số để đánh giá xu hướng học tập”",
+                    "D": "“Báo cáo học tập năm 2024”"
+                },
+                "correct": "B",
+                "explanation": "“25.000”, “áo thun”, “Hà Nội”"
+            },
+            {
+                "id": "3",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Thông tin là:",
+                "options": {
+                    "A": "Dữ liệu thô chưa được tổ chức",
+                    "B": "Các tri thức chuyên sâu",
+                    "C": "Dữ liệu đã được xử lý, tổ chức và mang ý nghĩa",
+                    "D": "Các quan điểm cá nhân"
+                },
+                "correct": "C",
+                "explanation": "Dữ liệu đã được xử lý, tổ chức và mang ý nghĩa"
+            },
+            {
+                "id": "4",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Ví dụ nào sau đây là tri thức?",
+                "options": {
+                    "A": "Số liệu bán hàng theo tháng",
+                    "B": "Phân tích xu hướng khách hàng và đề xuất hành động",
+                    "C": "Giá trị đơn chiếc của sản phẩm",
+                    "D": "Bảng thống kê doanh thu"
+                },
+                "correct": "B",
+                "explanation": "Phân tích xu hướng khách hàng và đề xuất hành động"
+            },
+            {
+                "id": "5",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Sự khác biệt giữa thông tin và tri thức nằm ở:",
+                "options": {
+                    "A": "Định dạng",
+                    "B": "Nguồn gốc dữ liệu",
+                    "C": "Mức độ xử lý và khả năng suy luận",
+                    "D": "Ngôn ngữ trình bày"
+                },
+                "correct": "C",
+                "explanation": "Mức độ xử lý và khả năng suy luận"
+            },
+            {
+                "id": "6",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Dữ liệu có cấu trúc thường được lưu trữ trong:",
+                "options": {
+                    "A": "File ảnh JPEG",
+                    "B": "Hệ thống cơ sở dữ liệu quan hệ",
+                    "C": "File video MP4",
+                    "D": "Bài viết trên mạng xã hội"
+                },
+                "correct": "B",
+                "explanation": "Hệ thống cơ sở dữ liệu quan hệ"
+            },
+            {
+                "id": "7",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Dữ liệu phi cấu trúc là:",
+                "options": {
+                    "A": "Dữ liệu có bảng, hàng, cột",
+                    "B": "Dữ liệu có thẻ XML rõ ràng",
+                    "C": "Văn bản tự do, video, hình ảnh",
+                    "D": "Tệp Excel"
+                },
+                "correct": "C",
+                "explanation": "Văn bản tự do, video, hình ảnh"
+            },
+            {
+                "id": "8",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Ví dụ nào sau đây là dữ liệu bán cấu trúc?",
+                "options": {
+                    "A": "JSON, XML",
+                    "B": "Bảng tính Excel",
+                    "C": "Video TikTok",
+                    "D": "Bình luận YouTube"
+                },
+                "correct": "A",
+                "explanation": "JSON, XML"
+            },
+            {
+                "id": "9",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Điểm yếu của dữ liệu phi cấu trúc là:",
+                "options": {
+                    "A": "Không có giá trị",
+                    "B": "Rất khó truy xuất, phân tích",
+                    "C": "Không phổ biến trong môi trường số",
+                    "D": "Không có trong thực tế"
+                },
+                "correct": "B",
+                "explanation": "Rất khó truy xuất, phân tích"
+            },
+            {
+                "id": "10",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Đặc điểm nào KHÔNG đúng với dữ liệu có cấu trúc?",
+                "options": {
+                    "A": "Dễ phân tích",
+                    "B": "Linh hoạt cao khi thay đổi",
+                    "C": "Lưu trữ dạng bảng",
+                    "D": "Tính nhất quán cao"
+                },
+                "correct": "B",
+                "explanation": "Linh hoạt cao khi thay đổi"
+            },
+            {
+                "id": "11",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "“Velocity” trong mô hình 4V nói về:",
+                "options": {
+                    "A": "Tính phong phú của dữ liệu",
+                    "B": "Tốc độ sinh ra và xử lý dữ liệu",
+                    "C": "Sự chính xác của dữ liệu",
+                    "D": "Dung lượng ổ cứng"
+                },
+                "correct": "B",
+                "explanation": "Tốc độ sinh ra và xử lý dữ liệu"
+            },
+            {
+                "id": "12",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Dữ liệu từ mạng xã hội thường là ví dụ cho yếu tố nào?",
+                "options": {
+                    "A": "Veracity",
+                    "B": "Volume",
+                    "C": "Variety",
+                    "D": "Value"
+                },
+                "correct": "C",
+                "explanation": "Variety"
+            },
+            {
+                "id": "13",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "“Veracity” nghĩa là:",
+                "options": {
+                    "A": "Dữ liệu có khối lượng lớn",
+                    "B": "Dữ liệu đa dạng về định dạng",
+                    "C": "Độ chính xác và tin cậy của dữ liệu",
+                    "D": "Tốc độ lan truyền dữ liệu"
+                },
+                "correct": "C",
+                "explanation": "Độ chính xác và tin cậy của dữ liệu"
+            },
+            {
+                "id": "14",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Thách thức của “Volume” là gì?",
+                "options": {
+                    "A": "Không thể xử lý dữ liệu dạng văn bản",
+                    "B": "Dễ bị mất dữ liệu",
+                    "C": "Cần hệ thống lưu trữ mở rộng",
+                    "D": "Không thể chia sẻ dữ liệu"
+                },
+                "correct": "C",
+                "explanation": "Cần hệ thống lưu trữ mở rộng"
+            },
+            {
+                "id": "15",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Một ví dụ của “Variety” là:",
+                "options": {
+                    "A": "Dữ liệu chỉ có văn bản",
+                    "B": "CSDL SQL",
+                    "C": "Video, hình ảnh, văn bản, cảm biến",
+                    "D": "Dữ liệu năm 2000"
+                },
+                "correct": "C",
+                "explanation": "Video, hình ảnh, văn bản, cảm biến"
+            },
+            {
+                "id": "16",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Kỹ năng “Đọc lướt” còn được gọi là:",
+                "options": {
+                    "A": "Scanning",
+                    "B": "Browsing",
+                    "C": "Skimming",
+                    "D": "Jumping"
+                },
+                "correct": "C",
+                "explanation": "Skimming"
+            },
+            {
+                "id": "17",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Khi đọc lướt, bạn nên đọc những phần nào?",
+                "options": {
+                    "A": "Câu đầu đoạn, tiêu đề, đoạn mở đầu và kết",
+                    "B": "Câu ngẫu nhiên",
+                    "C": "Từ cuối văn bản",
+                    "D": "Toàn bộ văn bản một lượt"
+                },
+                "correct": "A",
+                "explanation": "Câu đầu đoạn, tiêu đề, đoạn mở đầu và kết"
+            },
+            {
+                "id": "18",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Chiến lược duyệt trang web hiệu quả KHÔNG bao gồm:",
+                "options": {
+                    "A": "Xác định mục tiêu",
+                    "B": "Mở tất cả liên kết cùng lúc",
+                    "C": "Chọn nguồn phù hợp",
+                    "D": "Quan sát cấu trúc trang"
+                },
+                "correct": "B",
+                "explanation": "Mở tất cả liên kết cùng lúc"
+            },
+            {
+                "id": "19",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Nguồn nào đáng tin cậy hơn?",
+                "options": {
+                    "A": "Blog không rõ tác giả",
+                    "B": "Trang .com quảng cáo",
+                    "C": "Tên miền .edu hoặc .gov",
+                    "D": "Trang mạng xã hội cá nhân"
+                },
+                "correct": "C",
+                "explanation": "Tên miền .edu hoặc .gov"
+            },
+            {
+                "id": "20",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Một cách đánh giá nhanh độ tin cậy của trang là:",
+                "options": {
+                    "A": "Màu sắc nổi bật",
+                    "B": "Càng nhiều hình ảnh càng tốt",
+                    "C": "Có thông tin tác giả, ngày cập nhật",
+                    "D": "Đăng bởi người nổi tiếng"
+                },
+                "correct": "C",
+                "explanation": "Có thông tin tác giả, ngày cập nhật"
+            },
+            {
+                "id": "21",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Toán tử “-” dùng để:",
+                "options": {
+                    "A": "Tìm cụm từ chính xác",
+                    "B": "Loại trừ từ khóa",
+                    "C": "Thêm từ khóa",
+                    "D": "Tìm định nghĩa"
+                },
+                "correct": "B",
+                "explanation": "Loại trừ từ khóa"
+            },
+            {
+                "id": "22",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Dấu ngoặc kép \"\" trong tìm kiếm dùng để:",
+                "options": {
+                    "A": "Loại trừ kết quả",
+                    "B": "Mở rộng phạm vi tìm",
+                    "C": "Tìm cụm từ chính xác",
+                    "D": "Lọc theo file"
+                },
+                "correct": "C",
+                "explanation": "Tìm cụm từ chính xác"
+            },
+            {
+                "id": "23",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Để tìm bài viết về AI trên vnexpress.net, bạn dùng cú pháp:",
+                "options": {
+                    "A": "AI inurl:vnexpress",
+                    "B": "AI site:vnexpress.net",
+                    "C": "AI filetype:vnexpress",
+                    "D": "AI intitle:vnexpress"
+                },
+                "correct": "B",
+                "explanation": "AI site:vnexpress.net"
+            },
+            {
+                "id": "24",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Google Scholar được dùng để:",
+                "options": {
+                    "A": "Tìm kiếm tài khoản Gmail",
+                    "B": "Tìm thông tin thời tiết",
+                    "C": "Tìm tài liệu học thuật",
+                    "D": "Tra cứu hình ảnh"
+                },
+                "correct": "C",
+                "explanation": "Tìm tài liệu học thuật"
+            },
+            {
+                "id": "25",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Toán tử “OR” dùng để:",
+                "options": {
+                    "A": "Loại từ",
+                    "B": "Tìm một trong các từ khóa",
+                    "C": "Ghép 2 cụm từ",
+                    "D": "Tìm cụm từ trong tiêu đề"
+                },
+                "correct": "B",
+                "explanation": "Tìm một trong các từ khóa"
+            },
+            {
+                "id": "26",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Long-tail keyword là:",
+                "options": {
+                    "A": "Từ khóa dài và cụ thể",
+                    "B": "Từ khóa lặp lại",
+                    "C": "Từ viết tắt",
+                    "D": "Từ khóa phổ biến"
+                },
+                "correct": "A",
+                "explanation": "Từ khóa dài và cụ thể"
+            },
+            {
+                "id": "27",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Để tìm bài PDF, bạn dùng toán tử nào?",
+                "options": {
+                    "A": "filetype:pdf",
+                    "B": "ext:.pdf",
+                    "C": "docfile:pdf",
+                    "D": "findtype:pdf"
+                },
+                "correct": "A",
+                "explanation": "filetype:pdf"
+            },
+            {
+                "id": "28",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Ví dụ nào là từ khóa rõ ràng và cụ thể?",
+                "options": {
+                    "A": "Công nghệ",
+                    "B": "Công nghệ blockchain trong logistics",
+                    "C": "Thị trường",
+                    "D": "Tác động"
+                },
+                "correct": "B",
+                "explanation": "Công nghệ blockchain trong logistics"
+            },
+            {
+                "id": "29",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Bộ lọc theo thời gian dùng để:",
+                "options": {
+                    "A": "Tìm thông tin trong 1 khu vực",
+                    "B": "Tìm tài liệu đúng độ tuổi",
+                    "C": "Giới hạn kết quả theo năm, tháng",
+                    "D": "Chỉ tìm định dạng .docx"
+                },
+                "correct": "C",
+                "explanation": "Giới hạn kết quả theo năm, tháng"
+            },
+            {
+                "id": "30",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Kết hợp nhiều điều kiện lọc trong tìm kiếm bằng:",
+                "options": {
+                    "A": "TO",
+                    "B": "SUM",
+                    "C": "AND",
+                    "D": "LIST"
+                },
+                "correct": "C",
+                "explanation": "AND"
+            },
+            {
+                "id": "31",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Kỹ thuật lọc được sử dụng nhiều trong:",
+                "options": {
+                    "A": "Trình duyệt",
+                    "B": "Google Docs",
+                    "C": "Excel, SQL, Pandas",
+                    "D": "Gmail"
+                },
+                "correct": "C",
+                "explanation": "Excel, SQL, Pandas"
+            },
+            {
+                "id": "32",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Lọc dữ liệu theo điều kiện thường dùng toán tử:",
+                "options": {
+                    "A": "+",
+                    "B": "=",
+                    "C": "AND, OR",
+                    "D": "IN"
+                },
+                "correct": "C",
+                "explanation": "AND, OR"
+            },
+            {
+                "id": "33",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Filetype:pdf \"AI applications\" giúp bạn:",
+                "options": {
+                    "A": "Tìm video AI",
+                    "B": "Tìm ảnh về AI",
+                    "C": "Tìm file PDF liên quan đến AI",
+                    "D": "Tìm trang web"
+                },
+                "correct": "C",
+                "explanation": "Tìm file PDF liên quan đến AI"
+            },
+            {
+                "id": "34",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Lọc theo thời gian thường áp dụng trong:",
+                "options": {
+                    "A": "Xem video",
+                    "B": "Lọc dữ liệu theo ngày/tháng",
+                    "C": "Đổi màu văn bản",
+                    "D": "Chỉnh sửa file"
+                },
+                "correct": "B",
+                "explanation": "Lọc dữ liệu theo ngày/tháng"
+            },
+            {
+                "id": "35",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Web scraping là kỹ thuật:",
+                "options": {
+                    "A": "Bảo vệ web",
+                    "B": "Truy xuất dữ liệu tự động",
+                    "C": "Duyệt thủ công",
+                    "D": "Mã hóa dữ liệu"
+                },
+                "correct": "B",
+                "explanation": "Truy xuất dữ liệu tự động"
+            },
+            {
+                "id": "36",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ nào sau đây KHÔNG dùng để web scraping?",
+                "options": {
+                    "A": "BeautifulSoup",
+                    "B": "Selenium",
+                    "C": "Canva",
+                    "D": "Scrapy"
+                },
+                "correct": "C",
+                "explanation": "Canva"
+            },
+            {
+                "id": "37",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Google Dataset Search giúp:",
+                "options": {
+                    "A": "Chạy quảng cáo",
+                    "B": "Tìm tập dữ liệu công khai",
+                    "C": "Tạo website",
+                    "D": "Viết mã"
+                },
+                "correct": "B",
+                "explanation": "Tìm tập dữ liệu công khai"
+            },
+            {
+                "id": "38",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Pandas là thư viện dùng trong ngôn ngữ nào?",
+                "options": {
+                    "A": "C++",
+                    "B": "Java",
+                    "C": "Python",
+                    "D": "PHP"
+                },
+                "correct": "C",
+                "explanation": "Python"
+            },
+            {
+                "id": "39",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Một ứng dụng của Pandas là:",
+                "options": {
+                    "A": "Tạo ảnh",
+                    "B": "Lập kế hoạch",
+                    "C": "Phân tích và xử lý dữ liệu",
+                    "D": "Tìm kiếm video"
+                },
+                "correct": "C",
+                "explanation": "Phân tích và xử lý dữ liệu"
+            },
+            {
+                "id": "40",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Định dạng dữ liệu nào phổ biến trong Google Dataset Search?",
+                "options": {
+                    "A": "PSD",
+                    "B": "DOCX",
+                    "C": "CSV",
+                    "D": "MP3"
+                },
+                "correct": "C",
+                "explanation": "CSV"
+            },
+            {
+                "id": "41",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Thông tin số là gì theo Luật Công nghệ thông tin 2006?",
+                "options": {
+                    "A": "Thông tin truyền miệng",
+                    "B": "Thông tin được tạo lập bằng phương pháp tín hiệu số",
+                    "C": "Thông tin trên báo in",
+                    "D": "Dữ liệu được lưu trữ bằng giấy tờ"
+                },
+                "correct": "B",
+                "explanation": "Thông tin được tạo lập bằng phương pháp tín hiệu số"
+            },
+            {
+                "id": "42",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Ví dụ nào sau đây KHÔNG phải là thông tin số?",
+                "options": {
+                    "A": "Sách giấy truyền thống",
+                    "B": "File PDF thống kê dân số",
+                    "C": "Ứng dụng điện thoại",
+                    "D": "Video lưu trữ trên YouTube"
+                },
+                "correct": "A",
+                "explanation": "Sách giấy truyền thống"
+            },
+            {
+                "id": "43",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Thông tin sai lệch (misinformation) là gì?",
+                "options": {
+                    "A": "Thông tin đúng được chia sẻ sai thời điểm",
+                    "B": "Thông tin sai được chia sẻ đúng thời điểm",
+                    "C": "Thông tin sai nhưng được chia sẻ không có chủ đích",
+                    "D": "Thông tin đúng nhưng gây hiểu nhầm"
+                },
+                "correct": "C",
+                "explanation": "Thông tin sai nhưng được chia sẻ không có chủ đích"
+            },
+            {
+                "id": "44",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Thông tin xuyên tạc (disinformation) có đặc điểm nào?",
+                "options": {
+                    "A": "Được chia sẻ do thiếu kiến thức",
+                    "B": "Bị lỗi chính tả",
+                    "C": "Có mục đích lừa dối, gây hại",
+                    "D": "Không có tác hại đến xã hội"
+                },
+                "correct": "C",
+                "explanation": "Có mục đích lừa dối, gây hại"
+            },
+            {
+                "id": "45",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Tin giả (Fake News) thường có hình thức nào?",
+                "options": {
+                    "A": "Báo cáo học thuật",
+                    "B": "Clickbait, tin đồn",
+                    "C": "Thư tín chính thức",
+                    "D": "Video hướng dẫn học tập"
+                },
+                "correct": "B",
+                "explanation": "Clickbait, tin đồn"
+            },
+            {
+                "id": "46",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Bias trong thông tin có nghĩa là gì?",
+                "options": {
+                    "A": "Thông tin chính xác tuyệt đối",
+                    "B": "Thông tin được trình bày trung lập",
+                    "C": "Thông tin có thiên vị",
+                    "D": "Thông tin bị ẩn danh"
+                },
+                "correct": "C",
+                "explanation": "Thông tin có thiên vị"
+            },
+            {
+                "id": "47",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Ví dụ về Confirmation Bias là gì?",
+                "options": {
+                    "A": "Người đọc nghi ngờ mọi thông tin",
+                    "B": "Tin vào thông tin trái ngược niềm tin",
+                    "C": "Chỉ tin và chia sẻ thông tin phù hợp niềm tin sẵn có",
+                    "D": "Không quan tâm đến bất kỳ thông tin nào"
+                },
+                "correct": "C",
+                "explanation": "Chỉ tin và chia sẻ thông tin phù hợp niềm tin sẵn có"
+            },
+            {
+                "id": "48",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Thông tin thật (Information Accuracy) nên có yếu tố nào?",
+                "options": {
+                    "A": "Dựa vào tin đồn",
+                    "B": "Được xác minh, kiểm chứng, từ nguồn chính thống",
+                    "C": "Có nhiều lượt chia sẻ trên mạng",
+                    "D": "Không có nguồn trích dẫn"
+                },
+                "correct": "B",
+                "explanation": "Được xác minh, kiểm chứng, từ nguồn chính thống"
+            },
+            {
+                "id": "49",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Mô hình CRAAP KHÔNG bao gồm yếu tố nào sau đây?",
+                "options": {
+                    "A": "Relevance",
+                    "B": "Accuracy",
+                    "C": "Popularity",
+                    "D": "Purpose"
+                },
+                "correct": "C",
+                "explanation": "Popularity"
+            },
+            {
+                "id": "50",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Authority trong CRAAP dùng để đánh giá gì?",
+                "options": {
+                    "A": "Mức độ chia sẻ trên mạng",
+                    "B": "Địa chỉ email người dùng",
+                    "C": "Thẩm quyền của nguồn tin",
+                    "D": "Tốc độ truyền tin"
+                },
+                "correct": "C",
+                "explanation": "Thẩm quyền của nguồn tin"
+            },
+            {
+                "id": "51",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "CRAAP: Currency đề cập đến yếu tố gì?",
+                "options": {
+                    "A": "Ngôn ngữ của thông tin",
+                    "B": "Ngày xuất bản hoặc cập nhật của thông tin",
+                    "C": "Sự nổi tiếng của tác giả",
+                    "D": "Mức độ dài của bài viết"
+                },
+                "correct": "B",
+                "explanation": "Ngày xuất bản hoặc cập nhật của thông tin"
+            },
+            {
+                "id": "52",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Trong mô hình RADCAB, chữ D viết tắt cho yếu tố nào?",
+                "options": {
+                    "A": "Định hướng",
+                    "B": "Detail",
+                    "C": "Data",
+                    "D": "Delay"
+                },
+                "correct": "B",
+                "explanation": "Detail"
+            },
+            {
+                "id": "53",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Mô hình IMVAIN dùng nhiều trong lĩnh vực nào?",
+                "options": {
+                    "A": "Học đường",
+                    "B": "Công nghệ sinh học",
+                    "C": "Báo chí và truyền thông",
+                    "D": "Kỹ thuật phần mềm"
+                },
+                "correct": "C",
+                "explanation": "Báo chí và truyền thông"
+            },
+            {
+                "id": "54",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Trong IMVAIN, Verified có nghĩa là gì?",
+                "options": {
+                    "A": "Được chia sẻ rộng rãi",
+                    "B": "Được xác minh bằng bằng chứng cụ thể",
+                    "C": "Được viết bằng tiếng Anh",
+                    "D": "Được người nổi tiếng nhắc đến"
+                },
+                "correct": "B",
+                "explanation": "Được xác minh bằng bằng chứng cụ thể"
+            },
+            {
+                "id": "55",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Trong mô hình DRAMA, yếu tố nào thay thế cho yếu tố “Purpose” trong mô hình CRAAP.",
+                "options": {
+                    "A": "Motivation",
+                    "B": "Accuracy",
+                    "C": "Authority",
+                    "D": "Date"
+                },
+                "correct": "A",
+                "explanation": "Motivation"
+            },
+            {
+                "id": "56",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Trong mô hình DRAMA, Motivation tập trung vào:",
+                "options": {
+                    "A": "Mức độ chi tiết",
+                    "B": "Động cơ của người viết",
+                    "C": "Ngôn ngữ cảm xúc",
+                    "D": "Địa điểm công bố thông tin"
+                },
+                "correct": "B",
+                "explanation": "Động cơ của người viết"
+            },
+            {
+                "id": "57",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Bước đầu tiên trong SIFT là gì?",
+                "options": {
+                    "A": "Investigate the Source",
+                    "B": "Find better coverage",
+                    "C": "Stop",
+                    "D": "Trace"
+                },
+                "correct": "C",
+                "explanation": "Stop"
+            },
+            {
+                "id": "58",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Lateral Reading là gì?",
+                "options": {
+                    "A": "Đọc theo chiều dọc nội dung",
+                    "B": "Đọc qua một nguồn duy nhất",
+                    "C": "Đọc ngang – tra cứu thêm nguồn khác",
+                    "D": "Đọc nội dung hài hước"
+                },
+                "correct": "C",
+                "explanation": "Đọc ngang – tra cứu thêm nguồn khác"
+            },
+            {
+                "id": "59",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Trong SIFT, “Find Better Coverage” nhắm đến việc gì?",
+                "options": {
+                    "A": "Tìm nguồn thông tin có nhiều lượt like",
+                    "B": "Tìm nguồn khác đáng tin cậy hơn",
+                    "C": "Tìm video minh họa",
+                    "D": "Tìm bài viết từ cá nhân"
+                },
+                "correct": "B",
+                "explanation": "Tìm nguồn khác đáng tin cậy hơn"
+            },
+            {
+                "id": "60",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ nào sau đây KHÔNG nằm trong SIFT?",
+                "options": {
+                    "A": "Stop",
+                    "B": "Investigate",
+                    "C": "Analyze",
+                    "D": "Trace"
+                },
+                "correct": "C",
+                "explanation": "Analyze"
+            },
+            {
+                "id": "61",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Phân tích dữ liệu là gì?",
+                "options": {
+                    "A": "Lưu trữ dữ liệu",
+                    "B": "Biến dữ liệu thành thông tin có giá trị",
+                    "C": "Xóa dữ liệu không cần thiết",
+                    "D": "Gửi email tự động"
+                },
+                "correct": "B",
+                "explanation": "Biến dữ liệu thành thông tin có giá trị"
+            },
+            {
+                "id": "62",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Phân tích mô tả trả lời câu hỏi gì?",
+                "options": {
+                    "A": "Tại sao điều đó xảy ra?",
+                    "B": "Điều gì có thể xảy ra?",
+                    "C": "Điều gì đã xảy ra?",
+                    "D": "Làm gì tiếp theo?"
+                },
+                "correct": "C",
+                "explanation": "Điều gì đã xảy ra?"
+            },
+            {
+                "id": "63",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Phân tích chẩn đoán giúp xác định:",
+                "options": {
+                    "A": "Ai là người viết bài",
+                    "B": "Nguyên nhân hiện tượng",
+                    "C": "Tần suất xuất hiện",
+                    "D": "Độ dài bài viết"
+                },
+                "correct": "B",
+                "explanation": "Nguyên nhân hiện tượng"
+            },
+            {
+                "id": "64",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ nào sau đây KHÔNG phải công cụ làm sạch dữ liệu?",
+                "options": {
+                    "A": "Pandas",
+                    "B": "Excel",
+                    "C": "PowerPoint",
+                    "D": "OpenRefine"
+                },
+                "correct": "C",
+                "explanation": "PowerPoint"
+            },
+            {
+                "id": "65",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Phương pháp nào dùng để loại bỏ giá trị ngoại lai (outlier)?",
+                "options": {
+                    "A": "IQR, Z-score",
+                    "B": "Google search",
+                    "C": "AI chatbot",
+                    "D": "Filter mặc định"
+                },
+                "correct": "A",
+                "explanation": "IQR, Z-score"
+            },
+            {
+                "id": "66",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Tra cứu mạng là kỹ năng gì?",
+                "options": {
+                    "A": "Chia sẻ bài viết",
+                    "B": "Tìm kiếm và đánh giá thông tin trên Internet",
+                    "C": "Mở email",
+                    "D": "Xem phim trực tuyến"
+                },
+                "correct": "B",
+                "explanation": "Tìm kiếm và đánh giá thông tin trên Internet"
+            },
+            {
+                "id": "67",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Tìm kiếm ngược hình ảnh dùng để:",
+                "options": {
+                    "A": "Tăng tốc độ tải ảnh",
+                    "B": "Biến ảnh thành văn bản",
+                    "C": "Xác minh nguồn gốc ảnh",
+                    "D": "Làm cho ảnh rõ nét hơn"
+                },
+                "correct": "C",
+                "explanation": "Xác minh nguồn gốc ảnh"
+            },
+            {
+                "id": "68",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ Google Fact Check Explorer giúp:",
+                "options": {
+                    "A": "Kiểm tra chính tả",
+                    "B": "Tìm kiếm video YouTube",
+                    "C": "Tìm các bài kiểm chứng thông tin",
+                    "D": "Dịch bài viết"
+                },
+                "correct": "C",
+                "explanation": "Tìm các bài kiểm chứng thông tin"
+            },
+            {
+                "id": "69",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Dấu hiệu nhận biết tin giả là gì?",
+                "options": {
+                    "A": "Bài viết dài",
+                    "B": "Nhiều số liệu",
+                    "C": "Tiêu đề giật gân, không có nguồn rõ ràng",
+                    "D": "Có hình ảnh sắc nét"
+                },
+                "correct": "C",
+                "explanation": "Tiêu đề giật gân, không có nguồn rõ ràng"
+            },
+            {
+                "id": "70",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Kiểm tra chéo thông tin có ý nghĩa gì?",
+                "options": {
+                    "A": "Chia sẻ nhiều nơi",
+                    "B": "Đối chiếu với nhiều nguồn để tăng độ chính xác",
+                    "C": "Tạo nhiều bản sao",
+                    "D": "Đăng tải lên mạng xã hội"
+                },
+                "correct": "B",
+                "explanation": "Đối chiếu với nhiều nguồn để tăng độ chính xác"
+            },
+            {
+                "id": "71",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "AI có thể giúp gì trong kiểm tra thông tin?",
+                "options": {
+                    "A": "Tăng tốc độ xác minh",
+                    "B": "Xoá thông tin",
+                    "C": "Thay đổi ý kiến",
+                    "D": "Giấu nguồn gốc"
+                },
+                "correct": "A",
+                "explanation": "Tăng tốc độ xác minh"
+            },
+            {
+                "id": "72",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ Copyleaks dùng để:",
+                "options": {
+                    "A": "Gửi email",
+                    "B": "Kiểm tra văn bản có phải do AI viết không",
+                    "C": "Tạo biểu đồ",
+                    "D": "Dịch ngôn ngữ"
+                },
+                "correct": "B",
+                "explanation": "Kiểm tra văn bản có phải do AI viết không"
+            },
+            {
+                "id": "73",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ giúp kiểm tra deepfake video là gì?",
+                "options": {
+                    "A": "InVID",
+                    "B": "Excel",
+                    "C": "Grammarly",
+                    "D": "Notion"
+                },
+                "correct": "A",
+                "explanation": "InVID"
+            },
+            {
+                "id": "74",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "NLP trong AI là viết tắt của gì?",
+                "options": {
+                    "A": "Natural Learning Protocol",
+                    "B": "National Level Prediction",
+                    "C": "Natural Language Processing",
+                    "D": "New Language Provider"
+                },
+                "correct": "C",
+                "explanation": "Natural Language Processing"
+            },
+            {
+                "id": "75",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Một nhược điểm của AI là gì?",
+                "options": {
+                    "A": "Chậm",
+                    "B": "Không phân tích được",
+                    "C": "Tốn chi phí triển khai",
+                    "D": "Không cần dữ liệu"
+                },
+                "correct": "C",
+                "explanation": "Tốn chi phí triển khai"
+            },
+            {
+                "id": "76",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ nào giúp xác minh hình ảnh?",
+                "options": {
+                    "A": "Canva",
+                    "B": "TinEye",
+                    "C": "Google Docs",
+                    "D": "Notepad"
+                },
+                "correct": "B",
+                "explanation": "TinEye"
+            },
+            {
+                "id": "77",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Hoaxy dùng để làm gì?",
+                "options": {
+                    "A": "Tìm lỗi chính tả",
+                    "B": "Theo dõi lan truyền thông tin",
+                    "C": "Dịch bài viết",
+                    "D": "Vẽ biểu đồ"
+                },
+                "correct": "B",
+                "explanation": "Theo dõi lan truyền thông tin"
+            },
+            {
+                "id": "78",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Mô hình BERT do tổ chức nào phát triển?",
+                "options": {
+                    "A": "Apple",
+                    "B": "Microsoft",
+                    "C": "OpenAI",
+                    "D": "Google"
+                },
+                "correct": "D",
+                "explanation": "Google"
+            },
+            {
+                "id": "79",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Wolfram Alpha giúp gì trong kiểm tra thông tin?",
+                "options": {
+                    "A": "Tạo bản trình chiếu",
+                    "B": "Tìm số liệu chính xác từ nguồn cấu trúc",
+                    "C": "Viết blog cá nhân",
+                    "D": "Dịch văn bản"
+                },
+                "correct": "B",
+                "explanation": "Tìm số liệu chính xác từ nguồn cấu trúc"
+            },
+            {
+                "id": "80",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "FactCheck.org là tổ chức chuyên:",
+                "options": {
+                    "A": "Thiết kế đồ họa",
+                    "B": "Lập trình phần mềm",
+                    "C": "Kiểm chứng sự thật",
+                    "D": "Quảng bá thương hiệu"
+                },
+                "correct": "C",
+                "explanation": "Kiểm chứng sự thật"
+            },
+            {
+                "id": "81",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Dữ liệu số là gì?",
+                "options": {
+                    "A": "Văn bản được in trên giấy",
+                    "B": "Dữ liệu có thể lưu trữ, xử lý và truyền tải bằng máy tính",
+                    "C": "Dữ liệu được vẽ tay",
+                    "D": "Âm thanh không thu được"
+                },
+                "correct": "B",
+                "explanation": "Dữ liệu có thể lưu trữ, xử lý và truyền tải bằng máy tính"
+            },
+            {
+                "id": "82",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Thông tin số có thể biểu diễn dưới dạng:",
+                "options": {
+                    "A": "Chỉ văn bản",
+                    "B": "Hình ảnh và âm thanh",
+                    "C": "Nhiều dạng khác nhau như văn bản, âm thanh, hình ảnh, video",
+                    "D": "Dữ liệu bảng tính duy nhất"
+                },
+                "correct": "C",
+                "explanation": "Nhiều dạng khác nhau như văn bản, âm thanh, hình ảnh, video"
+            },
+            {
+                "id": "83",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Trong môi trường số, kỹ năng thông tin số KHÔNG bao gồm:",
+                "options": {
+                    "A": "Khả năng tra cứu và đánh giá thông tin",
+                    "B": "Khả năng nấu ăn",
+                    "C": "Kỹ năng tìm kiếm, xác thực, tổ chức thông tin",
+                    "D": "Kỹ năng phân tích dữ liệu"
+                },
+                "correct": "B",
+                "explanation": "Khả năng nấu ăn"
+            },
+            {
+                "id": "84",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Yếu tố nào sau đây thể hiện thông tin số chất lượng?",
+                "options": {
+                    "A": "Không có nguồn trích dẫn",
+                    "B": "Cập nhật mới nhất, chính xác, có nguồn gốc rõ ràng",
+                    "C": "Tạo từ trang mạng không xác định",
+                    "D": "Không cần xác thực"
+                },
+                "correct": "B",
+                "explanation": "Cập nhật mới nhất, chính xác, có nguồn gốc rõ ràng"
+            },
+            {
+                "id": "85",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Một ví dụ về nguồn dữ liệu mở là:",
+                "options": {
+                    "A": "Facebook cá nhân",
+                    "B": "Wikipedia",
+                    "C": "Nhóm kín trên mạng xã hội",
+                    "D": "Tin đồn lan truyền"
+                },
+                "correct": "B",
+                "explanation": "Wikipedia"
+            },
+            {
+                "id": "86",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Mô hình CRAAP gồm mấy yếu tố chính?",
+                "options": {
+                    "A": "2",
+                    "B": "3",
+                    "C": "5",
+                    "D": "6"
+                },
+                "correct": "C",
+                "explanation": "5"
+            },
+            {
+                "id": "87",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "CRAAP: “Accuracy” dùng để đánh giá:",
+                "options": {
+                    "A": "Tính đầy đủ của nội dung",
+                    "B": "Tính chính xác của thông tin",
+                    "C": "Tác giả có nổi tiếng không",
+                    "D": "Hình thức trình bày bài viết"
+                },
+                "correct": "B",
+                "explanation": "Tính chính xác của thông tin"
+            },
+            {
+                "id": "88",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "CRAAP: “Authority” tập trung vào:",
+                "options": {
+                    "A": "Người viết có thẩm quyền, chuyên môn không",
+                    "B": "Địa chỉ email của tác giả",
+                    "C": "Thời gian cập nhật",
+                    "D": "Cảm xúc người đọc"
+                },
+                "correct": "A",
+                "explanation": "Người viết có thẩm quyền, chuyên môn không"
+            },
+            {
+                "id": "89",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "CRAAP: “Purpose” là gì?",
+                "options": {
+                    "A": "Mục tiêu và động cơ của nội dung thông tin",
+                    "B": "Màu sắc của bài viết",
+                    "C": "Độ dài văn bản",
+                    "D": "Tên miền trang web"
+                },
+                "correct": "A",
+                "explanation": "Mục tiêu và động cơ của nội dung thông tin"
+            },
+            {
+                "id": "90",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "CRAAP: “Currency” dùng để kiểm tra:",
+                "options": {
+                    "A": "Thời điểm tạo hoặc cập nhật thông tin",
+                    "B": "Giá trị tiền tệ",
+                    "C": "Vị trí địa lý",
+                    "D": "Tên tác giả"
+                },
+                "correct": "A",
+                "explanation": "Thời điểm tạo hoặc cập nhật thông tin"
+            },
+            {
+                "id": "91",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "SIFT là viết tắt của mô hình nào?",
+                "options": {
+                    "A": "Source – Investigate – Fake – Truth",
+                    "B": "Stop – Investigate – Find – Trace",
+                    "C": "Study – Integrate – Filter – Track",
+                    "D": "Scan – Identify – Follow – Test"
+                },
+                "correct": "B",
+                "explanation": "Stop – Investigate – Find – Trace"
+            },
+            {
+                "id": "92",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "“Stop” trong SIFT có nghĩa là:",
+                "options": {
+                    "A": "Ngừng đọc mọi thứ",
+                    "B": "Tạm dừng để cân nhắc trước khi chia sẻ thông tin",
+                    "C": "Đóng ứng dụng",
+                    "D": "Xóa thông tin"
+                },
+                "correct": "B",
+                "explanation": "Tạm dừng để cân nhắc trước khi chia sẻ thông tin"
+            },
+            {
+                "id": "93",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "“Investigate the source” nghĩa là:",
+                "options": {
+                    "A": "Tra cứu nguồn tin gốc để xác minh",
+                    "B": "Sao chép nội dung",
+                    "C": "Bình luận bài viết",
+                    "D": "Gửi email"
+                },
+                "correct": "A",
+                "explanation": "Tra cứu nguồn tin gốc để xác minh"
+            },
+            {
+                "id": "94",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "“Trace claims, quotes and media” nghĩa là:",
+                "options": {
+                    "A": "Tìm nguồn gốc của thông tin hoặc phương tiện",
+                    "B": "Xem lượt thích",
+                    "C": "Dò dấu vết tội phạm",
+                    "D": "Dự đoán xu hướng"
+                },
+                "correct": "A",
+                "explanation": "Tìm nguồn gốc của thông tin hoặc phương tiện"
+            },
+            {
+                "id": "95",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ Google Reverse Image Search dùng để:",
+                "options": {
+                    "A": "Vẽ hình ảnh",
+                    "B": "Tìm kiếm ngược hình ảnh",
+                    "C": "Biến ảnh thành văn bản",
+                    "D": "Tăng độ phân giải"
+                },
+                "correct": "B",
+                "explanation": "Tìm kiếm ngược hình ảnh"
+            },
+            {
+                "id": "96",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "RADCAB là công cụ gì?",
+                "options": {
+                    "A": "Đánh giá phương tiện di chuyển",
+                    "B": "Đánh giá chất lượng thông tin trên mạng",
+                    "C": "Chuyển đổi văn bản",
+                    "D": "Vẽ sơ đồ"
+                },
+                "correct": "B",
+                "explanation": "Đánh giá chất lượng thông tin trên mạng"
+            },
+            {
+                "id": "97",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "RADCAB gồm bao nhiêu yếu tố?",
+                "options": {
+                    "A": "5",
+                    "B": "6",
+                    "C": "7",
+                    "D": "8"
+                },
+                "correct": "B",
+                "explanation": "6"
+            },
+            {
+                "id": "98",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Yếu tố “Detail” trong RADCAB liên quan đến:",
+                "options": {
+                    "A": "Độ dài đoạn văn",
+                    "B": "Mức độ chi tiết trong nội dung",
+                    "C": "Dạng dữ liệu",
+                    "D": "Số lượt bình luận"
+                },
+                "correct": "B",
+                "explanation": "Mức độ chi tiết trong nội dung"
+            },
+            {
+                "id": "99",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "DRAMA là mô hình cải tiến từ:",
+                "options": {
+                    "A": "CRAAP",
+                    "B": "SIFT",
+                    "C": "SWOT",
+                    "D": "PEST"
+                },
+                "correct": "A",
+                "explanation": "CRAAP"
+            },
+            {
+                "id": "100",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "“Motivation” trong DRAMA đánh giá:",
+                "options": {
+                    "A": "Ý định đằng sau nội dung",
+                    "B": "Chiều dài văn bản",
+                    "C": "Số người xem",
+                    "D": "Địa điểm viết bài"
+                },
+                "correct": "A",
+                "explanation": "Ý định đằng sau nội dung"
+            },
+            {
+                "id": "101",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "AI có thể giúp xác minh thông tin như thế nào?",
+                "options": {
+                    "A": "Làm giả thông tin",
+                    "B": "Kiểm tra sự thật tự động",
+                    "C": "Giấu nguồn tin",
+                    "D": "Tăng tương tác"
+                },
+                "correct": "B",
+                "explanation": "Kiểm tra sự thật tự động"
+            },
+            {
+                "id": "102",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ giúp kiểm tra văn bản AI viết là:",
+                "options": {
+                    "A": "Copyleaks",
+                    "B": "Paint",
+                    "C": "Zalo",
+                    "D": "YouTube"
+                },
+                "correct": "A",
+                "explanation": "Copyleaks"
+            },
+            {
+                "id": "103",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Deepfake là gì?",
+                "options": {
+                    "A": "Mã lỗi phần mềm",
+                    "B": "Video giả mạo bằng AI",
+                    "C": "Ứng dụng học ngôn ngữ",
+                    "D": "Bài báo khoa học"
+                },
+                "correct": "B",
+                "explanation": "Video giả mạo bằng AI"
+            },
+            {
+                "id": "104",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ InVID dùng để:",
+                "options": {
+                    "A": "Kiểm tra nguồn video",
+                    "B": "Làm video ca nhạc",
+                    "C": "Xử lý văn bản",
+                    "D": "Tạo biểu đồ"
+                },
+                "correct": "A",
+                "explanation": "Kiểm tra nguồn video"
+            },
+            {
+                "id": "105",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "TinEye giúp xác minh:",
+                "options": {
+                    "A": "Văn bản",
+                    "B": "Video",
+                    "C": "Hình ảnh",
+                    "D": "Âm thanh"
+                },
+                "correct": "C",
+                "explanation": "Hình ảnh"
+            },
+            {
+                "id": "106",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Tin giả thường có đặc điểm:",
+                "options": {
+                    "A": "Có nguồn gốc rõ ràng",
+                    "B": "Giật gân, không có căn cứ",
+                    "C": "Dễ kiểm chứng",
+                    "D": "Được xuất bản bởi chính phủ"
+                },
+                "correct": "B",
+                "explanation": "Giật gân, không có căn cứ"
+            },
+            {
+                "id": "107",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Misinformation là gì?",
+                "options": {
+                    "A": "Thông tin sai do cố ý",
+                    "B": "Thông tin sai nhưng không cố ý",
+                    "C": "Thông tin thật",
+                    "D": "Thông tin quảng cáo"
+                },
+                "correct": "B",
+                "explanation": "Thông tin sai nhưng không cố ý"
+            },
+            {
+                "id": "108",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Disinformation là gì?",
+                "options": {
+                    "A": "Thông tin thiếu chính xác do lỗi đánh máy",
+                    "B": "Thông tin sai được chia sẻ có chủ đích",
+                    "C": "Dữ liệu học thuật",
+                    "D": "Sách in"
+                },
+                "correct": "B",
+                "explanation": "Thông tin sai được chia sẻ có chủ đích"
+            },
+            {
+                "id": "109",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Bias trong thông tin là:",
+                "options": {
+                    "A": "Dạng tin cũ",
+                    "B": "Thiên kiến hoặc lệch lạc trong đánh giá thông tin",
+                    "C": "Tên công cụ tìm kiếm",
+                    "D": "Mẫu tin chuẩn"
+                },
+                "correct": "B",
+                "explanation": "Thiên kiến hoặc lệch lạc trong đánh giá thông tin"
+            },
+            {
+                "id": "110",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Confirmation Bias là hiện tượng:",
+                "options": {
+                    "A": "Tìm kiếm thông tin trái niềm tin",
+                    "B": "Chỉ tin thông tin củng cố niềm tin có sẵn",
+                    "C": "Kiểm chứng thông tin ngẫu nhiên",
+                    "D": "Không tìm kiếm thông tin"
+                },
+                "correct": "B",
+                "explanation": "Chỉ tin thông tin củng cố niềm tin có sẵn"
+            },
+            {
+                "id": "111",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Lateral Reading là gì?",
+                "options": {
+                    "A": "Đọc dọc",
+                    "B": "Đọc các nguồn khác nhau để xác minh",
+                    "C": "Đọc lướt",
+                    "D": "Đọc chậm"
+                },
+                "correct": "B",
+                "explanation": "Đọc các nguồn khác nhau để xác minh"
+            },
+            {
+                "id": "112",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ nào giúp kiểm chứng tin lan truyền trên mạng?",
+                "options": {
+                    "A": "Hoaxy",
+                    "B": "Excel",
+                    "C": "TikTok",
+                    "D": "Word"
+                },
+                "correct": "A",
+                "explanation": "Hoaxy"
+            },
+            {
+                "id": "113",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "FactCheck.org là:",
+                "options": {
+                    "A": "Trang blog cá nhân",
+                    "B": "Tổ chức kiểm chứng thông tin",
+                    "C": "Diễn đàn thảo luận",
+                    "D": "Công cụ dịch thuật"
+                },
+                "correct": "B",
+                "explanation": "Tổ chức kiểm chứng thông tin"
+            },
+            {
+                "id": "114",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Snopes.com giúp:",
+                "options": {
+                    "A": "Tìm hình ảnh đẹp",
+                    "B": "Phân tích ngữ pháp",
+                    "C": "Kiểm tra độ xác thực của tin tức",
+                    "D": "Xem video"
+                },
+                "correct": "C",
+                "explanation": "Kiểm tra độ xác thực của tin tức"
+            },
+            {
+                "id": "115",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ kiểm tra AI-generated text:",
+                "options": {
+                    "A": "ChatGPT",
+                    "B": "GPTZero",
+                    "C": "Notepad",
+                    "D": "Zoom"
+                },
+                "correct": "B",
+                "explanation": "GPTZero"
+            },
+            {
+                "id": "116",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Tại sao cần đánh giá thông tin số?",
+                "options": {
+                    "A": "Để giải trí",
+                    "B": "Để đảm bảo tiếp cận thông tin đúng, chính xác",
+                    "C": "Để giảm thời gian sử dụng Internet",
+                    "D": "Để tăng like"
+                },
+                "correct": "B",
+                "explanation": "Để đảm bảo tiếp cận thông tin đúng, chính xác"
+            },
+            {
+                "id": "117",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Một lợi ích của thông tin chính xác là gì?",
+                "options": {
+                    "A": "Gây hoang mang",
+                    "B": "Dễ bị giả mạo",
+                    "C": "Hỗ trợ ra quyết định hiệu quả",
+                    "D": "Giảm sự hiểu biết"
+                },
+                "correct": "C",
+                "explanation": "Hỗ trợ ra quyết định hiệu quả"
+            },
+            {
+                "id": "118",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ nào dưới đây KHÔNG dùng để xác minh thông tin?",
+                "options": {
+                    "A": "Google Fact Check",
+                    "B": "Wikipedia",
+                    "C": "Zalo Chat",
+                    "D": "TinEye"
+                },
+                "correct": "C",
+                "explanation": "Zalo Chat"
+            },
+            {
+                "id": "119",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Công cụ nào hỗ trợ phân tích dữ liệu số?",
+                "options": {
+                    "A": "Excel",
+                    "B": "TikTok",
+                    "C": "ZingMP3",
+                    "D": "Paint"
+                },
+                "correct": "A",
+                "explanation": "Excel"
+            },
+            {
+                "id": "120",
+                "module": "Module 1. Khai thác dữ liệu và thông tin",
+                "question": "Nguồn thông tin đáng tin cậy là:",
+                "options": {
+                    "A": "Trang chính phủ, viện nghiên cứu, báo chí uy tín",
+                    "B": "Trang blog cá nhân ẩn danh",
+                    "C": "Group Facebook không kiểm duyệt",
+                    "D": "Tin đồn từ bạn bè"
+                },
+                "correct": "A",
+                "explanation": "Trang chính phủ, viện nghiên cứu, báo chí uy tín"
+            }
+            ,
+            // Module 2 Data
+            // Part 2.1
+            {
+                "id": "M2_1",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Giao tiếp trong môi trường số là gì?",
+                "options": {
+                    "A": "Giao tiếp qua điện thoại cố định",
+                    "B": "Giao tiếp bằng lời nói trực tiếp",
+                    "C": "Giao tiếp thông qua các nền tảng công nghệ số",
+                    "D": "Giao tiếp qua văn bản giấy"
+                },
+                "correct": "C",
+                "explanation": "Giao tiếp thông qua các nền tảng công nghệ số"
+            },
+            {
+                "id": "M2_2",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Giao tiếp ngoại tuyến (offline) là hình thức giao tiếp nào?",
+                "options": {
+                    "A": "Giao tiếp sử dụng Internet và mạng xã hội",
+                    "B": "Giao tiếp không sử dụng Internet, có sự tương tác trực tiếp của con người",
+                    "C": "Chỉ giao tiếp qua các cuộc gọi điện thoại",
+                    "D": "Chỉ giao tiếp qua các ấn phẩm in"
+                },
+                "correct": "B",
+                "explanation": "Giao tiếp không sử dụng Internet, có sự tương tác trực tiếp của con người"
+            },
+            {
+                "id": "M2_3",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Đâu là một ví dụ về giao tiếp trực tuyến?",
+                "options": {
+                    "A": "Các cuộc họp mặt trực tiếp",
+                    "B": "Đọc báo in",
+                    "C": "Nghe đài phát thanh",
+                    "D": "Gửi thư điện tử (E-mail)"
+                },
+                "correct": "D",
+                "explanation": "Gửi thư điện tử (E-mail)"
+            },
+            {
+                "id": "M2_4",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Tương tác thông qua công nghệ số bao gồm hoạt động nào sau đây?",
+                "options": {
+                    "A": "Hợp tác qua nền tảng số như Google Docs",
+                    "B": "Chỉ bao gồm các cuộc trò chuyện thông thường",
+                    "C": "Chỉ bao gồm việc tham gia các diễn đàn",
+                    "D": "Chỉ tương tác với trợ lý ảo"
+                },
+                "correct": "A",
+                "explanation": "Hợp tác qua nền tảng số như Google Docs"
+            },
+            {
+                "id": "M2_5",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Một trong những ý nghĩa của việc tương tác hiệu quả qua công nghệ số là gì?",
+                "options": {
+                    "A": "Giảm khả năng hợp tác nhóm",
+                    "B": "Tăng nguy cơ bị lừa đảo",
+                    "C": "Phát triển kỹ năng giao tiếp chuyên nghiệp trên không gian số",
+                    "D": "Hạn chế việc tiếp cận tài nguyên học tập"
+                },
+                "correct": "C",
+                "explanation": "Phát triển kỹ năng giao tiếp chuyên nghiệp trên không gian số"
+            },
+            {
+                "id": "M2_6",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "\"Netiquette\" (Phép lịch sự trên mạng) chủ yếu đề cập đến điều gì?",
+                "options": {
+                    "A": "Các quy tắc về an ninh mạng",
+                    "B": "Các tiêu chuẩn ứng xử và giao tiếp có trách nhiệm trực tuyến",
+                    "C": "Các luật lệ về bản quyền nội dung số",
+                    "D": "Các giao thức kỹ thuật cho internet"
+                },
+                "correct": "B",
+                "explanation": "Các tiêu chuẩn ứng xử và giao tiếp có trách nhiệm trực tuyến"
+            },
+            {
+                "id": "M2_7",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Một địa chỉ e-mail bao gồm hai phần là tên miền và tên địa phương, được phân tách bằng ký hiệu nào?",
+                "options": {
+                    "A": "#",
+                    "B": "&",
+                    "C": "$",
+                    "D": "@"
+                },
+                "correct": "D",
+                "explanation": "@"
+            },
+            {
+                "id": "M2_8",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Giao tiếp hiệu quả trên nền tảng số yêu cầu kỹ năng nào sau đây?",
+                "options": {
+                    "A": "Chỉ cần sử dụng mạng xã hội",
+                    "B": "Kỹ năng lắng nghe, phản hồi đúng lúc",
+                    "C": "Tạo ra nhiều nhóm chat",
+                    "D": "Dùng nhiều biểu tượng cảm xúc"
+                },
+                "correct": "B",
+                "explanation": "Kỹ năng lắng nghe, phản hồi đúng lúc"
+            },
+            {
+                "id": "M2_9",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Tại sao tài khoản email được coi là \"chìa khóa\" để nhận dạng người dùng trực tuyến?",
+                "options": {
+                    "A": "Vì nó là phương tiện giao tiếp duy nhất",
+                    "B": "Vì nó không yêu cầu mật khẩu",
+                    "C": "Vì nó có tính bảo mật tuyệt đối",
+                    "D": "Vì nó thường được dùng như \"thông tin đăng nhập\" để kết nối với các dịch vụ trực tuyến khác"
+                },
+                "correct": "D",
+                "explanation": "Vì nó thường được dùng như \"thông tin đăng nhập\" để kết nối với các dịch vụ trực tuyến khác"
+            },
+            {
+                "id": "M2_10",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Hình thức nào sau đây KHÔNG phải là giao tiếp số?",
+                "options": {
+                    "A": "Chat trực tuyến",
+                    "B": "Cuộc họp video qua zoom",
+                    "C": "Thư viết tay",
+                    "D": "Email"
+                },
+                "correct": "C",
+                "explanation": "Thư viết tay"
+            },
+            {
+                "id": "M2_11",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Để giữ an toàn cho tài khoản email, một trong những biện pháp được khuyến nghị là gì?",
+                "options": {
+                    "A": "Sử dụng cùng một mật khẩu cho tất cả các tài khoản",
+                    "B": "Tạo mật khẩu mạnh và bật bảo vệ hai lớp",
+                    "C": "Công khai địa chỉ email cá nhân ở mọi nơi",
+                    "D": "Không bao giờ thay đổi mật khẩu"
+                },
+                "correct": "B",
+                "explanation": "Tạo mật khẩu mạnh và bật bảo vệ hai lớp"
+            },
+            {
+                "id": "M2_12",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "\"Netiquette\" (Phép lịch sự trên mạng) KHÔNG bao gồm nguyên tắc nào dưới đây?",
+                "options": {
+                    "A": "Tôn trọng quyền riêng tư của người khác.",
+                    "B": "Đọc kỹ trước khi gửi để tránh sai sót.",
+                    "C": "Tham gia thảo luận một cách có trách nhiệm.",
+                    "D": "Tranh luận gay gắt để bảo vệ quan điểm cá nhân."
+                },
+                "correct": "D",
+                "explanation": "Tranh luận gay gắt để bảo vệ quan điểm cá nhân."
+            },
+            {
+                "id": "M2_13",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Khi viết email công việc, dòng tiêu đề (Subject) nên",
+                "options": {
+                    "A": "Để trống để tạo sự tò mò",
+                    "B": "Viết dài, mô tả chi tiết toàn bộ nội dung email",
+                    "C": "Ngắn gọn, rõ ràng và phản ánh chính xác nội dung chính",
+                    "D": "Chỉ sử dụng các ký tự đặc biệt để nổi bật"
+                },
+                "correct": "C",
+                "explanation": "Ngắn gọn, rõ ràng và phản ánh chính xác nội dung chính"
+            },
+            {
+                "id": "M2_14",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Hợp tác số là gì?",
+                "options": {
+                    "A": "Làm việc nhóm thông qua nền tảng số",
+                    "B": "Giao tiếp qua giấy tờ",
+                    "C": "Làm việc độc lập trên máy tính",
+                    "D": "Giao tiếp qua điện thoại cá nhân"
+                },
+                "correct": "A",
+                "explanation": "Làm việc nhóm thông qua nền tảng số"
+            },
+            {
+                "id": "M2_15",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Một lợi ích của hợp tác trong môi trường số là",
+                "options": {
+                    "A": "Tăng thời gian xử lý công việc",
+                    "B": "Làm việc mọi lúc, mọi nơi",
+                    "C": "Không cần người quản lý",
+                    "D": "Hạn chế chia sẻ tài liệu"
+                },
+                "correct": "B",
+                "explanation": "Làm việc mọi lúc, mọi nơi"
+            },
+            {
+                "id": "M2_16",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Việc sử dụng chữ in đậm ở một số nội dung trong giao tiếp số thường được diễn giải là",
+                "options": {
+                    "A": "Thể hiện sự chuyên nghiệp",
+                    "B": "Giúp người đọc dễ nhìn thấy hơn",
+                    "C": "Nhấn mạnh thông tin quan trọng người đọc cần lưu ý",
+                    "D": "Hành động không hài lòng"
+                },
+                "correct": "C",
+                "explanation": "Nhấn mạnh thông tin quan trọng người đọc cần lưu ý"
+            },
+            {
+                "id": "M2_17",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Khi nhận được một tin nhắn hoặc email có nội dung gây khó chịu, bạn nên",
+                "options": {
+                    "A": "Phản hồi ngay lập tức với một thông điệp tương tự",
+                    "B": "Bỏ qua và không phản hồi",
+                    "C": "Chuyển tiếp cho tất cả mọi người để họ cùng biết",
+                    "D": "Tạm dừng, suy nghĩ kỹ và trả lời một cách bình tĩnh, chuyên nghiệp"
+                },
+                "correct": "D",
+                "explanation": "Tạm dừng, suy nghĩ kỹ và trả lời một cách bình tĩnh, chuyên nghiệp"
+            },
+            {
+                "id": "M2_18",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Theo một nghiên cứu năm 2021, lý do phổ biến nhất mọi người sử dụng mạng xã hội là gì?",
+                "options": {
+                    "A": "Đọc các câu chuyện tin tức",
+                    "B": "Tìm kiếm cảm hứng",
+                    "C": "Lấp đầy thời gian rảnh rỗi",
+                    "D": "Duy trì kết nối với gia đình và bạn bè"
+                },
+                "correct": "D",
+                "explanation": "Duy trì kết nối với gia đình và bạn bè"
+            },
+            {
+                "id": "M2_19",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Yếu tố nào sau đây là QUAN TRỌNG NHẤT để xây dựng lòng tin trong giao tiếp số?",
+                "options": {
+                    "A": "Tốc độ phản hồi nhanh chóng",
+                    "B": "Sự trung thực, minh bạch và nhất quán",
+                    "C": "Sử dụng nhiều hình ảnh và biểu tượng cảm xúc",
+                    "D": "Luôn đồng ý với mọi người"
+                },
+                "correct": "B",
+                "explanation": "Sự trung thực, minh bạch và nhất quán"
+            },
+            {
+                "id": "M2_20",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Tôn trọng quyền riêng tư trong giao tiếp số nghĩa là:",
+                "options": {
+                    "A": "Chia sẻ mọi thông tin của bạn bè",
+                    "B": "Dùng camera ẩn",
+                    "C": "Ghi âm cuộc họp bí mật",
+                    "D": "Không đăng tải thông tin người khác khi chưa được phép"
+                },
+                "correct": "D",
+                "explanation": "Không đăng tải thông tin người khác khi chưa được phép"
+            },
+            {
+                "id": "M2_21",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Khi tham gia một diễn đàn trực tuyến mới, việc đầu tiên bạn nên làm là gì?",
+                "options": {
+                    "A": "Đăng ngay một câu hỏi của mình",
+                    "B": "Quảng cáo sản phẩm/dịch vụ của mình",
+                    "C": "Giới thiệu bản thân và đọc các quy tắc của cộng đồng",
+                    "D": "Chỉ đọc mà không bao giờ tương tác"
+                },
+                "correct": "C",
+                "explanation": "Giới thiệu bản thân và đọc các quy tắc của cộng đồng"
+            },
+            {
+                "id": "M2_22",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Theo tài liệu, trách nhiệm công dân trong môi trường số KHÔNG bao gồm hành vi nào sau đây?",
+                "options": {
+                    "A": "Phản hồi chính sách thông qua cổng thông tin điện tử",
+                    "B": "Lan tỏa các giá trị tích cực",
+                    "C": "Giám sát và góp ý một cách có trách nhiệm",
+                    "D": "Luôn giữ im lặng trước các vấn đề xã hội"
+                },
+                "correct": "D",
+                "explanation": "Luôn giữ im lặng trước các vấn đề xã hội"
+            },
+            {
+                "id": "M2_23",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Đâu là một trong những hành vi thể hiện trách nhiệm công dân trong môi trường số?",
+                "options": {
+                    "A": "Phớt lờ các vi phạm trên mạng",
+                    "B": "Tuân thủ pháp luật số và chuẩn mực đạo đức số",
+                    "C": "Chia sẻ mọi thông tin mà không cần kiểm chứng",
+                    "D": "Sử dụng danh tính ẩn danh để công kích người khác"
+                },
+                "correct": "B",
+                "explanation": "Tuân thủ pháp luật số và chuẩn mực đạo đức số"
+            },
+            {
+                "id": "M2_24",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Trong giao tiếp số, việc sử dụng biểu tượng cảm xúc (emoji) nên",
+                "options": {
+                    "A": "Được sử dụng thay thế hoàn toàn cho ngôn từ",
+                    "B": "Tránh tuyệt đối trong mọi ngữ cảnh công việc",
+                    "C": "Càng nhiều càng tốt để thể hiện cảm xúc",
+                    "D": "Được sử dụng một cách thận trọng, phù hợp với ngữ cảnh và đối tượng"
+                },
+                "correct": "D",
+                "explanation": "Được sử dụng một cách thận trọng, phù hợp với ngữ cảnh và đối tượng"
+            },
+            {
+                "id": "M2_25",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Khi giao tiếp trong môi trường số (email, chat), yếu tố nào sau đây là QUAN TRỌNG NHẤT để tránh hiểu lầm?",
+                "options": {
+                    "A": "Sử dụng nhiều biểu tượng cảm xúc (emoji) để thể hiện thái độ.",
+                    "B": "Viết thật ngắn gọn, bỏ qua các từ không cần thiết.",
+                    "C": "Sử dụng ngôn ngữ rõ ràng, mạch lạc và đúng ngữ pháp.",
+                    "D": "Luôn viết hoa toàn bộ các từ quan trọng."
+                },
+                "correct": "C",
+                "explanation": "Sử dụng ngôn ngữ rõ ràng, mạch lạc và đúng ngữ pháp."
+            },
+            {
+                "id": "M2_26",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Khi bị bôi nhọ trên mạng xã hội, người dùng có thể làm gì để bảo vệ mình theo quy định của Luật An ninh mạng, 2018?",
+                "options": {
+                    "A": "Trả đũa bằng cách bôi nhọ lại người khác",
+                    "B": "Im lặng và chấp nhận",
+                    "C": "Xóa tài khoản mạng xã hội của mình",
+                    "D": "Sử dụng công cụ “Báo cáo nội dung” hoặc gửi khiếu nại đến cơ quan quản lý"
+                },
+                "correct": "D",
+                "explanation": "Sử dụng công cụ “Báo cáo nội dung” hoặc gửi khiếu nại đến cơ quan quản lý"
+            },
+            {
+                "id": "M2_27",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Khi bạn không chắc chắn về ý nghĩa của một tin nhắn, cách tốt nhất là",
+                "options": {
+                    "A": "Giả vờ như bạn đã hiểu",
+                    "B": "Phớt lờ tin nhắn đó",
+                    "C": "Hỏi lại để làm rõ thay vì đưa ra giả định",
+                    "D": "Hỏi một người khác giải thích hộ"
+                },
+                "correct": "C",
+                "explanation": "Hỏi lại để làm rõ thay vì đưa ra giả định"
+            },
+            {
+                "id": "M2_28",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "\"Lắng nghe tích cực\" trong môi trường số KHÔNG bao gồm việc",
+                "options": {
+                    "A": "Ngắt lời người khác khi họ đang trình bày, chia sẻ thông tin",
+                    "B": "Đọc kỹ toàn bộ tin nhắn trước khi trả lời",
+                    "C": "Đưa ra phản hồi dựa trên sự hiểu biết đầy đủ về vấn đề",
+                    "D": "Tóm tắt lại các điểm chính để xác nhận thông tin"
+                },
+                "correct": "A",
+                "explanation": "Ngắt lời người khác khi họ đang trình bày, chia sẻ thông tin"
+            },
+            {
+                "id": "M2_29",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Công cụ nào sau đây được thiết kế ĐẶC BIỆT cho việc quản lý dự án và công việc nhóm?",
+                "options": {
+                    "A": "Zoom",
+                    "B": "Trello/Asana",
+                    "C": "Gmail",
+                    "D": "Microsoft Word"
+                },
+                "correct": "B",
+                "explanation": "Trello/Asana"
+            },
+            {
+                "id": "M2_30",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.1",
+                "question": "Phần mềm nào sau đây hỗ trợ giao tiếp nhóm trực tuyến hiệu quả?",
+                "options": {
+                    "A": "Microsoft Word",
+                    "B": "Excel",
+                    "C": "Photoshop",
+                    "D": "Zalo"
+                },
+                "correct": "D",
+                "explanation": "Zalo"
+            }
+            ,
+            // Part 2.2
+            {
+                "id": "M2_31",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Ứng dụng “Hue-S” được nêu làm ví dụ cho hành vi công dân số nào?",
+                "options": {
+                    "A": "Góp ý dự thảo luật",
+                    "B": "Gửi phản ánh hiện trạng (lấn chiếm lòng đường) đến chính quyền",
+                    "C": "Đăng ký môn học trực tuyến",
+                    "D": "Nộp học phí trực tuyến"
+                },
+                "correct": "B",
+                "explanation": "Gửi phản ánh hiện trạng (lấn chiếm lòng đường) đến chính quyền"
+            },
+            {
+                "id": "M2_32",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Mục đích chính của các công cụ nhắn tin tức thời (Zalo, Skype, Facebook Messager) trong công việc là",
+                "options": {
+                    "A": "Thay thế hoàn toàn email",
+                    "B": "Cho các cuộc trò chuyện dài và phức tạp",
+                    "C": "Giao tiếp nhanh, trao đổi theo nhóm và chia sẻ tệp tin nhanh chóng",
+                    "D": "Chỉ để trò chuyện xã hội"
+                },
+                "correct": "C",
+                "explanation": "Giao tiếp nhanh, trao đổi theo nhóm và chia sẻ tệp tin nhanh chóng"
+            },
+            {
+                "id": "M2_33",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Đâu là một trong những tính năng nổi bật của cuộc gọi video (video call)?",
+                "options": {
+                    "A": "Chỉ cho phép gọi một-một",
+                    "B": "Giao tiếp trực tiếp, thấy được biểu cảm và ngôn ngữ cơ thể",
+                    "C": "Yêu cầu kết nối mạng dây",
+                    "D": "Không thể thực hiện trên thiết bị di động"
+                },
+                "correct": "B",
+                "explanation": "Giao tiếp trực tiếp, thấy được biểu cảm và ngôn ngữ cơ thể"
+            },
+            {
+                "id": "M2_34",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Trong bối cảnh giao tiếp trực tuyến, \"btw\" là viết tắt của cụm từ nào?",
+                "options": {
+                    "A": "Be there whenever",
+                    "B": "By the way",
+                    "C": "Better than watching",
+                    "D": "Before the work"
+                },
+                "correct": "B",
+                "explanation": "By the way"
+            },
+            {
+                "id": "M2_35",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Theo tài liệu, quyền của một \"Công dân số\" bao gồm điều gì?",
+                "options": {
+                    "A": "Quyền truy cập công nghệ, quyền riêng tư và quyền tự do ngôn luận",
+                    "B": "Chỉ có quyền truy cập Internet tốc độ cao",
+                    "C": "Quyền đăng tải mọi thông tin không cần kiểm chứng",
+                    "D": "Quyền sử dụng miễn phí mọi phần mềm"
+                },
+                "correct": "A",
+                "explanation": "Quyền truy cập công nghệ, quyền riêng tư và quyền tự do ngôn luận"
+            },
+            {
+                "id": "M2_36",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Khi tra cứu văn bản pháp luật trực tuyến, tại sao việc kiểm tra hiệu lực của văn bản lại quan trọng?",
+                "options": {
+                    "A": "Để biết văn bản có phổ biến hay không",
+                    "B": "Vì văn bản có thể hết hiệu lực",
+                    "C": "Để xem có bao nhiêu người đã đọc văn bản",
+                    "D": "Để tải văn bản về máy nhanh hơn"
+                },
+                "correct": "B",
+                "explanation": "Vì văn bản có thể hết hiệu lực"
+            },
+            {
+                "id": "M2_37",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Tính năng \"Comment\" trong Google Docs hay Microsoft Word có tác dụng chính là gì?",
+                "options": {
+                    "A": "Tự động sửa lỗi chính tả",
+                    "B": "Cho phép nhiều người cùng chỉnh sửa trực tiếp mà không cần trao đổi",
+                    "C": "Tạo đường link (liên kết) đến tài liệu trách dẫn",
+                    "D": "Cung cấp không gian để đưa ra phản hồi, góp ý mà không thay đổi nội dung gốc"
+                },
+                "correct": "D",
+                "explanation": "Cung cấp không gian để đưa ra phản hồi, góp ý mà không thay đổi nội dung gốc"
+            },
+            {
+                "id": "M2_38",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Nền tảng nào sau đây thuộc nhóm \"Lưu trữ đám mây & Hợp tác tài liệu\"?",
+                "options": {
+                    "A": "TikTok",
+                    "B": "Zalo",
+                    "C": "Google Drive",
+                    "D": "Facebook"
+                },
+                "correct": "C",
+                "explanation": "Google Drive"
+            },
+            {
+                "id": "M2_39",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Khi tổ chức một cuộc họp trực tuyến, việc nào sau đây là NÊN LÀM?",
+                "options": {
+                    "A": "Gửi lịch họp (lời mời) kèm theo link tham gia, chương trình nghị sự và tài liệu đọc trước",
+                    "B": "Chỉ cần gửi link họp trước giờ họp",
+                    "C": "Không cần phải có kế hoạch trước, họp tự phát",
+                    "D": "Yêu cầu mọi người luôn bật camera trong suốt cuộc họp"
+                },
+                "correct": "A",
+                "explanation": "Gửi lịch họp (lời mời) kèm theo link tham gia, chương trình nghị sự và tài liệu đọc trước"
+            },
+            {
+                "id": "M2_40",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Một \"Wiki\" trong môi trường làm việc số thường được sử dụng để làm gì?",
+                "options": {
+                    "A": "Gửi email hàng loạt",
+                    "B": "Tạo các bản trình chiếu phức tạp",
+                    "C": "Tạo và chia sẻ kiến thức chung, nơi mọi người cùng đóng góp và chỉnh sửa",
+                    "D": "Quản lý lịch cá nhân"
+                },
+                "correct": "C",
+                "explanation": "Tạo và chia sẻ kiến thức chung, nơi mọi người cùng đóng góp và chỉnh sửa"
+            },
+            {
+                "id": "M2_41",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Hành vi nào sau đây được xem là \"NÊN LÀM\" trong môi trường mạng?",
+                "options": {
+                    "A": "Phát tán thông tin chưa kiểm chứng",
+                    "B": "Sử dụng ngôn từ tôn trọng và xây dựng",
+                    "C": "Dùng từ ngữ xúc phạm người khác",
+                    "D": "Nhấn vào các liên kết không rõ nguồn gốc"
+                },
+                "correct": "B",
+                "explanation": "Sử dụng ngôn từ tôn trọng và xây dựng"
+            },
+            {
+                "id": "M2_42",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Hành vi nào sau đây được xem là \"KHÔNG NÊN LÀM\" trong môi trường mạng?",
+                "options": {
+                    "A": "Kiểm chứng nguồn tin trước khi chia sẻ",
+                    "B": "Phản ánh sự thật một cách văn minh",
+                    "C": "Vu khống, bôi nhọ qua mạng xã hội",
+                    "D": "Bảo mật thông tin cá nhân"
+                },
+                "correct": "C",
+                "explanation": "Vu khống, bôi nhọ qua mạng xã hội"
+            },
+            {
+                "id": "M2_43",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Để một cuộc họp trực tuyến hiệu quả, người chủ trì nên",
+                "options": {
+                    "A": "Cho phép mọi người nói tự do, không cần giơ tay",
+                    "B": "Tắt micro của tất cả người tham gia và chỉ bật khi cần phát biểu",
+                    "C": "Không can thiệp vào các cuộc trò chuyện song song",
+                    "D": "Để cuộc họp kéo dài không giới hạn thời gian"
+                },
+                "correct": "B",
+                "explanation": "Tắt micro của tất cả người tham gia và chỉ bật khi cần phát biểu"
+            },
+            {
+                "id": "M2_44",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Lợi ích chính của việc sử dụng các công cụ quản lý công việc (như Asana, Trello) là",
+                "options": {
+                    "A": "Thay thế hoàn toàn việc giao tiếp giữa các thành viên",
+                    "B": "Tự động hoàn thành tất cả các nhiệm vụ",
+                    "C": "Chỉ dành cho trưởng nhóm",
+                    "D": "Tăng cường sự minh bạch, theo dõi tiến độ và phân công trách nhiệm rõ ràng"
+                },
+                "correct": "D",
+                "explanation": "Tăng cường sự minh bạch, theo dõi tiến độ và phân công trách nhiệm rõ ràng"
+            },
+            {
+                "id": "M2_45",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Khi cộng tác trên một tài liệu chung, bạn phát hiện ra lỗi sai quan trọng. Bạn nên",
+                "options": {
+                    "A": "Tự sửa lỗi mà không nói gì",
+                    "B": "Gửi email riêng cho sếp phàn nàn về lỗi sai",
+                    "C": "Sử dụng tính năng \"Comment\" hoặc \"Suggesting\" để đề xuất sửa đổi và tag người liên quan",
+                    "D": "Bỏ qua vì không phải việc của mình"
+                },
+                "correct": "B",
+                "explanation": "Gửi email riêng cho sếp phàn nàn về lỗi sai"
+            },
+            {
+                "id": "M2_46",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Bước đầu tiên trong quy trình 5 bước kiểm chứng thông tin là gì?",
+                "options": {
+                    "A": "Phân tích nội dung",
+                    "B": "Kiểm tra chéo",
+                    "C": "Đánh giá nguồn tin",
+                    "D": "Xác thực hình ảnh"
+                },
+                "correct": "C",
+                "explanation": "Đánh giá nguồn tin"
+            },
+            {
+                "id": "M2_47",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "\"Làm việc theo nhóm không đồng bộ\" (Asynchronous Collaboration) có nghĩa là",
+                "options": {
+                    "A": "Các thành viên làm việc vào các thời điểm khác nhau, không cần có mặt cùng lúc",
+                    "B": "Các thành viên làm việc cùng nhau tại cùng một thời điểm",
+                    "C": "Nhóm làm việc mà không có nhóm trưởng",
+                    "D": "Nhóm sử dụng duy nhất một công cụ để giao tiếp"
+                },
+                "correct": "A",
+                "explanation": "Các thành viên làm việc vào các thời điểm khác nhau, không cần có mặt cùng lúc"
+            },
+            {
+                "id": "M2_48",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Khi tham gia họp trực tuyến, việc sử dụng tính năng \"giơ tay\" (Raise Hand) có tác dụng gì?",
+                "options": {
+                    "A": "Thể hiện sự đồng ý với người đang nói",
+                    "B": "Thông báo rời cuộc họp",
+                    "C": "Tắt micro của người khác",
+                    "D": "Báo hiệu cho người chủ trì biết bạn muốn phát biểu mà không làm gián đoạn cuộc họp"
+                },
+                "correct": "D",
+                "explanation": "Báo hiệu cho người chủ trì biết bạn muốn phát biểu mà không làm gián đoạn cuộc họp"
+            },
+            {
+                "id": "M2_49",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Trong môi trường làm việc nhóm trực tuyến, \"Single Source of Truth\" (Nguồn sự thật duy nhất) thường đề cập đến",
+                "options": {
+                    "A": "Một người trong nhóm luôn luôn đúng",
+                    "B": "Một nền tảng hoặc tài liệu trung tâm nơi mọi thông tin cập nhật mới nhất được lưu trữ",
+                    "C": "Một cuộc họp kéo dài hàng giờ",
+                    "D": "Một kênh chat riêng tư giữa trưởng nhóm và sếp"
+                },
+                "correct": "B",
+                "explanation": "Một nền tảng hoặc tài liệu trung tâm nơi mọi thông tin cập nhật mới nhất được lưu trữ"
+            },
+            {
+                "id": "M2_50",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Trong môi trường làm việc cộng tác, để tránh \"xung đột phiên bản\" khi nhiều người cùng chỉnh sửa một tệp, bạn nên",
+                "options": {
+                    "A": "Gửi tệp qua email cho từng người một",
+                    "B": "Chỉ cho phép một người có quyền chỉnh sửa tại một thời điểm",
+                    "C": "In tài liệu ra và giửi cho mọi người chỉnh sửa bằng tay rồi tổng hợp lại",
+                    "D": "Sử dụng các công cụ cộng tác trực tuyến (Google Workspace, Microsoft 365) cho phép chỉnh sửa đồng thời"
+                },
+                "correct": "D",
+                "explanation": "Sử dụng các công cụ cộng tác trực tuyến (Google Workspace, Microsoft 365) cho phép chỉnh sửa đồng thời"
+            },
+            {
+                "id": "M2_51",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Khi chia sẻ màn hình trong cuộc họp trực tuyến, điều gì là QUAN TRỌNG nhất",
+                "options": {
+                    "A": "Đảm bảo bạn chỉ chia sẻ các tab, cửa sổ ứng dụng cụ thể cần thiết cho cuộc họp",
+                    "B": "Chia sẻ toàn bộ màn hình để mọi người thấy mọi thứ",
+                    "C": "Luôn bật webcam khi chia sẻ màn hình",
+                    "D": "Cần hỏi ý kiến và nhận được đồng ý của các thành viên mới chia sẻ"
+                },
+                "correct": "A",
+                "explanation": "Đảm bảo bạn chỉ chia sẻ các tab, cửa sổ ứng dụng cụ thể cần thiết cho cuộc họp"
+            },
+            {
+                "id": "M2_52",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Khi một thành viên trong nhóm liên tục không phản hồi tin nhắn hoặc email, việc đầu tiên bạn nên làm là",
+                "options": {
+                    "A": "Công khai nhắc họ trong nhóm chat để gây áp lực",
+                    "B": "Báo cáo họ với cấp trên ngay lập tức",
+                    "C": "Thử liên lạc bằng một phương thức khác (gọi điện) để hỏi thăm và nhắc nhở lịch sự",
+                    "D": "Coi như họ đang không hợp tác và tự làm thay công việc của họ"
+                },
+                "correct": "C",
+                "explanation": "Thử liên lạc bằng một phương thức khác (gọi điện) để hỏi thăm và nhắc nhở lịch sự"
+            },
+            {
+                "id": "M2_53",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Khi làm việc nhóm trên các nền tảng số, hành động nào sau đây là NGUY HIỂM nhất?",
+                "options": {
+                    "A": "Đăng nhập nền tảng trên nhiều thiết bị",
+                    "B": "Đăng xuất khỏi tài khoản khi sử dụng thiết bị công cộng",
+                    "C": "Chia sẻ mật khẩu tài khoản cá nhân cho đồng nghiệp",
+                    "D": "Sử dụng liên kết chia sẻ với quyền \"Chỉ xem\""
+                },
+                "correct": "C",
+                "explanation": "Chia sẻ mật khẩu tài khoản cá nhân cho đồng nghiệp"
+            },
+            {
+                "id": "M2_54",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Khi cần gửi một tệp tin chứa thông tin nhạy cảm, biện pháp an toàn hơn cả là",
+                "options": {
+                    "A": "Gửi tệp đính kèm email không mật khẩu",
+                    "B": "Đặt mật khẩu cho tệp và gửi mật khẩu qua một kênh khác (tin nhắn SMS)",
+                    "C": "Upload lên dịch vụ lưu trữ, chia sẻ liên kết công khai",
+                    "D": "Không bao giờ gửi thông tin nhạy cảm qua internet"
+                },
+                "correct": "B",
+                "explanation": "Đặt mật khẩu cho tệp và gửi mật khẩu qua một kênh khác (tin nhắn SMS)"
+            },
+            {
+                "id": "M2_55",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Hiện tượng \"Zoombombing\" xảy ra khi",
+                "options": {
+                    "A": "Có người không được mời xâm nhập và quấy rối cuộc họp trực tuyến",
+                    "B": "Một cuộc họp Zoom có chất lượng video rất xấu",
+                    "C": "Ứng dụng Zoom bị lỗi và tự động thoát",
+                    "D": "Người tham gia sử dụng background ảo"
+                },
+                "correct": "A",
+                "explanation": "Có người không được mời xâm nhập và quấy rối cuộc họp trực tuyến"
+            },
+            {
+                "id": "M2_56",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Khi nhận được một email yêu cầu cung cấp thông tin đăng nhập hoặc thông tin cá nhân, bạn nên",
+                "options": {
+                    "A": "Trả lời ngay vì có thể đây là yêu cầu khẩn cấp",
+                    "B": "Xóa email đó ngay lập tức và không click vào bất kỳ liên kết nào",
+                    "C": "Chuyển tiếp email cho đồng nghiệp để hỏi ý kiến",
+                    "D": "Cung cấp thông tin để xác minh danh tính của họ"
+                },
+                "correct": "B",
+                "explanation": "Xóa email đó ngay lập tức và không click vào bất kỳ liên kết nào"
+            },
+            {
+                "id": "M2_57",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Khi chia sẻ tệp trên Google Drive hoặc OneDrive, quyền \"Có thể chỉnh sửa\" nên được cấp cho:",
+                "options": {
+                    "A": "Chỉ những người thực sự cần chỉnh sửa tài liệu",
+                    "B": "Bất kỳ ai có liên kết",
+                    "C": "Tất cả mọi người trong công ty",
+                    "D": "Tất cả đều đúng"
+                },
+                "correct": "A",
+                "explanation": "Chỉ những người thực sự cần chỉnh sửa tài liệu"
+            },
+            {
+                "id": "M2_58",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Bản quyền (Copyright) trong môi trường số áp dụng cho",
+                "options": {
+                    "A": "Chỉ các sản phẩm in ấn",
+                    "B": "Các ý tưởng chưa được công bố",
+                    "C": "Các sản phẩm phần mềm miễn phí",
+                    "D": "Các tác phẩm gốc được thể hiện dưới dạng kỹ thuật số (bài viết, hình ảnh, video, code)"
+                },
+                "correct": "D",
+                "explanation": "Các tác phẩm gốc được thể hiện dưới dạng kỹ thuật số (bài viết, hình ảnh, video, code)"
+            },
+            {
+                "id": "M2_59",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Tin giả thường được thiết kế để kích động yếu tố nào của người đọc, làm lu mờ khả năng phán xét?",
+                "options": {
+                    "A": "Lý trí",
+                    "B": "Cảm xúc mạnh",
+                    "C": "Trí nhớ",
+                    "D": "Khả năng tính toán"
+                },
+                "correct": "B",
+                "explanation": "Cảm xúc mạnh"
+            },
+            {
+                "id": "M2_60",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.2",
+                "question": "Khi thấy đồng nghiệp vô tình chia sẻ thông tin nhạy cảm trong kênh chat chung, bạn nên",
+                "options": {
+                    "A": "Nhắc họ ngay lập tức trong kênh chat chung",
+                    "B": "Báo cáo họ với quản trị viên hệ thống",
+                    "C": "Nhắn tin riêng cho họ để họ biết và gỡ bỏ tin nhắn đó",
+                    "D": "Chụp màn hình để lưu lại thông tin đó"
+                },
+                "correct": "C",
+                "explanation": "Nhắn tin riêng cho họ để họ biết và gỡ bỏ tin nhắn đó"
+            }
+            ,
+            // Part 2.3
+            {
+                "id": "M2_61",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Việc sử dụng mạng riêng ảo (VPN) khi làm việc từ xa quan trọng vì",
+                "options": {
+                    "A": "Giúp tăng tốc độ internet",
+                    "B": "Mã hóa kết nối của bạn, bảo vệ dữ liệu khỏi bị nghe trộm trên mạng công cộng",
+                    "C": "Cho phép bạn truy cập các trang web giải trí bị chặn",
+                    "D": "Thay thế cho phần mềm diệt virus"
+                },
+                "correct": "B",
+                "explanation": "Mã hóa kết nối của bạn, bảo vệ dữ liệu khỏi bị nghe trộm trên mạng công cộng"
+            },
+            {
+                "id": "M2_62",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "\"Vishing\" là hình thức tấn công mạng thông qua",
+                "options": {
+                    "A": "Thư điện tử (email)",
+                    "B": "Tin nhắn văn bản (SMS)",
+                    "C": "Cuộc gọi thoại giả mạo",
+                    "D": "Phần mềm độc hại"
+                },
+                "correct": "C",
+                "explanation": "Cuộc gọi thoại giả mạo"
+            },
+            {
+                "id": "M2_63",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "\"Doxing\" là hình thức bạo lực mạng nào?",
+                "options": {
+                    "A": "Gửi các tin nhắn đe dọa liên tục",
+                    "B": "Lan truyền thông tin sai lệch để bôi nhọ",
+                    "C": "Công khai thông tin cá nhân của người khác mà không có sự cho phép",
+                    "D": "Lập tài khoản giả mạo"
+                },
+                "correct": "C",
+                "explanation": "Công khai thông tin cá nhân của người khác mà không có sự cho phép"
+            },
+            {
+                "id": "M2_64",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Theo pháp luật Việt Nam, hành vi cung cấp, chia sẻ thông tin giả mạo, sai sự thật trên mạng có thể bị phạt tiền ở mức nào?",
+                "options": {
+                    "A": "1.000.000 đến 2.000.000 đồng",
+                    "B": "5.000.000 đến 10.000.000 đồng",
+                    "C": "10.000.000 đến 20.000.000 đồng",
+                    "D": "50.000.000 đến 70.000.000 đồng"
+                },
+                "correct": "C",
+                "explanation": "10.000.000 đến 20.000.000 đồng"
+            },
+            {
+                "id": "M2_65",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Khi làm việc với các nhóm đa văn hóa, yếu tố nào cần được đặc biệt lưu ý?",
+                "options": {
+                    "A": "Tôn trọng sự khác biệt về múi giờ, ngôn ngữ, ngày lễ và phong cách làm việc",
+                    "B": "Giả định rằng mọi người đều có cùng phong cách giao tiếp",
+                    "C": "Bắt mọi người phải tuân theo văn hóa của số đông",
+                    "D": "Chỉ giao tiếp bằng văn bản để tránh hiểu lầm"
+                },
+                "correct": "A",
+                "explanation": "Tôn trọng sự khác biệt về múi giờ, ngôn ngữ, ngày lễ và phong cách làm việc"
+            },
+            {
+                "id": "M2_66",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Sự chậm trễ trong phản hồi từ một thành viên ở múi giờ khác thường nên được",
+                "options": {
+                    "A": "Làm việc không nghiêm túc",
+                    "B": "Hiểu và thông cảm, không nên gửi email nhắc liên tục ngoài giờ làm của họ",
+                    "C": "Báo cáo ngay với quản lý",
+                    "D": "Phớt lờ và giao công việc cho người khác"
+                },
+                "correct": "B",
+                "explanation": "Hiểu và thông cảm, không nên gửi email nhắc liên tục ngoài giờ làm của họ"
+            },
+            {
+                "id": "M2_67",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Trong môi trường đa văn hóa, việc sử dụng tiếng lóng, thành ngữ địa phương nên",
+                "options": {
+                    "A": "Được khuyến khích sử dụng vì nó thú vị",
+                    "B": "Được dịch sang tất cả các ngôn ngữ",
+                    "C": "Chỉ dùng trong các cuộc trò chuyện riêng tư",
+                    "D": "Nên hạn chế vì có thể gây khó hiểu cho một số người"
+                },
+                "correct": "D",
+                "explanation": "Nên hạn chế vì có thể gây khó hiểu cho một số người"
+            },
+            {
+                "id": "M2_68",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Khi có xung đột trong nhóm trực tuyến, cách giải quyết PHÙ HỢP nhất là",
+                "options": {
+                    "A": "Tranh luận công khai trên kênh chat chung cho đến khi có người thắng cuộc",
+                    "B": "Chuyển sang một cuộc gọi video riêng tư để thảo luận trực tiếp và tìm giải pháp",
+                    "C": "Im lặng và hy vọng xung đột tự biến mất",
+                    "D": "Yêu cầu mọi người trong nhóm bỏ phiếu chọn phe"
+                },
+                "correct": "B",
+                "explanation": "Chuyển sang một cuộc gọi video riêng tư để thảo luận trực tiếp và tìm giải pháp"
+            },
+            {
+                "id": "M2_69",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "\"Văn hóa phản hồi\" lành mạnh trong môi trường số KHÔNG bao gồm",
+                "options": {
+                    "A": "Đưa ra phản hồi mang tính xây dựng, cụ thể",
+                    "B": "Tập trung vào vấn đề, không tấn công cá nhân",
+                    "C": "Đưa ra phản hồi tiêu cực trước toàn bộ nhóm mà không báo trước",
+                    "D": "Sẵn sàng đón nhận phản hồi từ người khác"
+                },
+                "correct": "C",
+                "explanation": "Đưa ra phản hồi tiêu cực trước toàn bộ nhóm mà không báo trước"
+            },
+            {
+                "id": "M2_70",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Khi thuyết trình trực tuyến cho một nhóm đa văn hóa, bạn nên",
+                "options": {
+                    "A": "Nói thật nhanh để truyền tải nhiều thông tin",
+                    "B": "Sử dụng nhiều biệt ngữ chuyên môn để thể hiện sự hiểu biết",
+                    "C": "Nói chậm rãi, rõ ràng và sử dụng hình ảnh/minh họa trực quan để hỗ trợ",
+                    "D": "Chỉ tập trung vào một nhóm văn hóa chiếm đa số"
+                },
+                "correct": "C",
+                "explanation": "Nói chậm rãi, rõ ràng và sử dụng hình ảnh/minh họa trực quan để hỗ trợ"
+            },
+            {
+                "id": "M2_71",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Trong môi trường số, \"sự hiện diện\" (Presence) của bạn thường được thể hiện qua",
+                "options": {
+                    "A": "Trạng thái trực tuyến (Online/Away/Do Not Disturb) trên các ứng dụng",
+                    "B": "Số lượng email bạn gửi đi mỗi ngày",
+                    "C": "Âm lượng micro của bạn",
+                    "D": "Màu sắc background trong cuộc họp"
+                },
+                "correct": "A",
+                "explanation": "Trạng thái trực tuyến (Online/Away/Do Not Disturb) trên các ứng dụng"
+            },
+            {
+                "id": "M2_72",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Khi một thành viên mới tham gia nhóm từ xa, cách tốt nhất để giúp họ hòa nhập là:",
+                "options": {
+                    "A": "Để họ tự tìm hiểu mọi thứ",
+                    "B": "Tổ chức một buổi giới thiệu chào mừng, giao một người cố vấn hỗ trợ họ",
+                    "C": "Giao ngay cho họ một dự án khó",
+                    "D": "Yêu cầu họ tự giới thiệu bản thân trong email gửi toàn công ty"
+                },
+                "correct": "B",
+                "explanation": "Tổ chức một buổi giới thiệu chào mừng, giao một người cố vấn hỗ trợ họ"
+            },
+            {
+                "id": "M2_73",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Giá trị cốt lõi của \"hợp tác\" trong môi trường số là",
+                "options": {
+                    "A": "Mọi người làm việc độc lập và báo cáo kết quả cuối cùng",
+                    "B": "Tuân thủ mệnh lệnh từ lãnh đạo một cách tuyệt đối",
+                    "C": "Cạnh tranh để trở thành người giỏi nhất",
+                    "D": "Cùng nhau làm việc hướng tới một mục tiêu chung, chia sẻ ý tưởng và hỗ trợ lẫn nhau"
+                },
+                "correct": "D",
+                "explanation": "Cùng nhau làm việc hướng tới một mục tiêu chung, chia sẻ ý tưởng và hỗ trợ lẫn nhau"
+            },
+            {
+                "id": "M2_74",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Dịch vụ công trực tuyến là gì?",
+                "options": {
+                    "A": "Việc mua bán hàng hóa qua mạng",
+                    "B": "Việc cung cấp các dịch vụ hành chính công thông qua nền tảng số",
+                    "C": "Việc học tập trên các nền tảng E-learning",
+                    "D": "Việc giao tiếp với bạn bè qua mạng xã hội"
+                },
+                "correct": "B",
+                "explanation": "Việc cung cấp các dịch vụ hành chính công thông qua nền tảng số"
+            },
+            {
+                "id": "M2_75",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Đâu là một trong những quyền của công dân khi sử dụng dịch vụ công trực tuyến?",
+                "options": {
+                    "A": "Quyền yêu cầu xử lý hồ sơ ngay lập tức",
+                    "B": "Quyền không cần cung cấp thông tin trung thực",
+                    "C": "Quyền theo dõi tiến độ xử lý hồ sơ",
+                    "D": "Quyền sử dụng ngôn từ thô tục khi phản hồi"
+                },
+                "correct": "C",
+                "explanation": "Quyền theo dõi tiến độ xử lý hồ sơ"
+            },
+            {
+                "id": "M2_76",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Đâu là một trong những nghĩa vụ của công dân khi sử dụng dịch vụ công trực tuyến?",
+                "options": {
+                    "A": "Cung cấp thông tin trung thực và đầy đủ",
+                    "B": "Có thể nộp hồ sơ trễ hạn",
+                    "C": "Phê bình thô tục qua hệ thống phản hồi",
+                    "D": "Không cần tuân thủ quy định"
+                },
+                "correct": "A",
+                "explanation": "Cung cấp thông tin trung thực và đầy đủ"
+            },
+            {
+                "id": "M2_77",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Bước đầu tiên trong quy trình phản ánh, kiến nghị qua nền tảng số là gì?",
+                "options": {
+                    "A": "Truy cập nền tảng phản ánh",
+                    "B": "Gửi thông tin phản ánh",
+                    "C": "Ghi nhận hiện trạng một cách khách quan và xác thực",
+                    "D": "Theo dõi mã xử lý và kết quả"
+                },
+                "correct": "C",
+                "explanation": "Ghi nhận hiện trạng một cách khách quan và xác thực"
+            },
+            {
+                "id": "M2_78",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Khi góp ý chính sách trực tuyến, nguyên tắc quan trọng cần tuân thủ là gì?",
+                "options": {
+                    "A": "Góp ý dựa trên cảm tính",
+                    "B": "Dùng ngôn ngữ xây dựng, dựa trên cơ sở pháp lý và thực tiễn",
+                    "C": "Sao chép góp ý của người khác",
+                    "D": "Phê phán và chỉ trích gay gắt"
+                },
+                "correct": "B",
+                "explanation": "Dùng ngôn ngữ xây dựng, dựa trên cơ sở pháp lý và thực tiễn"
+            },
+            {
+                "id": "M2_79",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Trong các cuộc thảo luận nghiêm túc về chính sách, hành vi nào thể hiện trách nhiệm của một công dân số?",
+                "options": {
+                    "A": "Sử dụng danh tính ẩn danh",
+                    "B": "Sử dụng danh tính thật (chính danh)",
+                    "C": "Công kích cá nhân",
+                    "D": "Tranh luận dựa trên cảm xúc"
+                },
+                "correct": "B",
+                "explanation": "Sử dụng danh tính thật (chính danh)"
+            },
+            {
+                "id": "M2_80",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Khi tranh luận trên mạng, thay vì công kích cá nhân, người dùng nên làm gì?",
+                "options": {
+                    "A": "Tranh luận dựa trên lý lẽ, bằng chứng",
+                    "B": "Dừng cuộc tranh luận ngay lập tức",
+                    "C": "Chấp nhận mọi ý kiến của người khác",
+                    "D": "Báo cáo tài khoản của người có ý kiến trái chiều"
+                },
+                "correct": "A",
+                "explanation": "Tranh luận dựa trên lý lẽ, bằng chứng"
+            },
+            {
+                "id": "M2_81",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Trang web nào được đề cập là nền tảng đáng tin cậy để tra cứu văn bản pháp luật?",
+                "options": {
+                    "A": "Facebook.com",
+                    "B": "Google.com",
+                    "C": "https://thuvienphapluat.vn",
+                    "D": "Wikipedia.org"
+                },
+                "correct": "C",
+                "explanation": "https://thuvienphapluat.vn"
+            },
+            {
+                "id": "M2_82",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Khi tra cứu văn bản pháp luật trực tuyến, tại sao việc kiểm tra hiệu lực của văn bản lại quan trọng?",
+                "options": {
+                    "A": "Để biết văn bản có phổ biến hay không",
+                    "B": "Vì văn bản có thể đã bị sửa đổi, thay thế hoặc hết hiệu lực",
+                    "C": "Để tải văn bản về máy nhanh hơn",
+                    "D": "Để xem có bao nhiêu người đã đọc văn bản"
+                },
+                "correct": "B",
+                "explanation": "Vì văn bản có thể đã bị sửa đổi, thay thế hoặc hết hiệu lực"
+            },
+            {
+                "id": "M2_83",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Nền tảng nào được ví dụ là mô hình kiến tạo tri thức phổ thông, một \"Bách khoa toàn thư Mở\"?",
+                "options": {
+                    "A": "GitHub",
+                    "B": "Google Docs",
+                    "C": "Facebook",
+                    "D": "Wikipedia"
+                },
+                "correct": "D",
+                "explanation": "Wikipedia"
+            },
+            {
+                "id": "M2_84",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Công cụ giao tiếp nào được xem là tiêu chuẩn vàng cho môi trường chuyên nghiệp với khả năng tổ chức trò chuyện theo \"kênh\"?",
+                "options": {
+                    "A": "Zalo",
+                    "B": "Slack",
+                    "C": "Facebook Messenger",
+                    "D": "Viber"
+                },
+                "correct": "B",
+                "explanation": "Slack"
+            },
+            {
+                "id": "M2_85",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Đâu là một trong những thuận lợi chính mà hợp tác số mang lại?",
+                "options": {
+                    "A": "Làm gia tăng rào cản địa lý và thời gian",
+                    "B": "Hạn chế sự sáng tạo và trao đổi ý tưởng",
+                    "C": "Phá vỡ rào cản địa lý và thời gian",
+                    "D": "Yêu cầu mọi thành viên phải làm việc cùng lúc"
+                },
+                "correct": "C",
+                "explanation": "Phá vỡ rào cản địa lý và thời gian"
+            },
+            {
+                "id": "M2_86",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Rủi ro về \"con người\" trong hợp tác số bao gồm hiện tượng nào?",
+                "options": {
+                    "A": "Xung đột, thiếu tin tưởng, và hiện tượng \"ăn theo\" (Social Loafing)",
+                    "B": "Giao tiếp sai lệch do thiếu ngữ cảnh",
+                    "C": "Mất dữ liệu do tấn công mạng",
+                    "D": "Lỗi phần mềm và vi phạm bảo mật"
+                },
+                "correct": "A",
+                "explanation": "Xung đột, thiếu tin tưởng, và hiện tượng \"ăn theo\" (Social Loafing)"
+            },
+            {
+                "id": "M2_87",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Khi bạn vô tình gửi một email chứa thông tin nhạy cảm đến nhầm người, việc đầu tiên bạn nên làm là gì?",
+                "options": {
+                    "A": "Hy vọng họ không đọc được",
+                    "B": "Gửi ngay một email xin lỗi đến tất cả mọi người trong danh sách liên lạc",
+                    "C": "Thu hồi email (nếu có thể) và ngay lập tức liên hệ với người nhận để giải thích và đề nghị họ xóa email",
+                    "D": "Đổ lỗi cho công nghệ"
+                },
+                "correct": "C",
+                "explanation": "Thu hồi email (nếu có thể) và ngay lập tức liên hệ với người nhận để giải thích và đề nghị họ xóa email"
+            },
+            {
+                "id": "M2_88",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Hành vi nào sau đây có thể được coi là \"quấy rối trực tuyến\" (Online Harassment)?",
+                "options": {
+                    "A": "Gửi lời chào buổi sáng đến đồng nghiệp",
+                    "B": "Liên tục gửi tin nhắn không mong muốn, đe dọa hoặc bình luận xúc phạm cá nhân",
+                    "C": "Chia sẻ tài liệu công việc lên kênh chung",
+                    "D": "Đặt trạng thái \"Đang bận\""
+                },
+                "correct": "D",
+                "explanation": "Đặt trạng thái \"Đang bận\""
+            },
+            {
+                "id": "M2_89",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Bạn nhận thấy một thành viên trong nhóm thường xuyên bị loại khỏi các kênh thông tin quan trọng. Bạn nên",
+                "options": {
+                    "A": "Chủ động thêm họ vào các kênh và nhắc nhở người phụ trách về sự thiếu sót này",
+                    "B": "Giả vờ như không biết",
+                    "C": "Nói xấu họ với sếp",
+                    "D": "Cho rằng họ không muốn tham gia"
+                },
+                "correct": "A",
+                "explanation": "Chủ động thêm họ vào các kênh và nhắc nhở người phụ trách về sự thiếu sót này"
+            },
+            {
+                "id": "M2_90",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.3",
+                "question": "Khi sử dụng hình ảnh từ Internet cho bài thuyết trình công việc, điều quan trọng nhất cần làm là:",
+                "options": {
+                    "A": "Có thể sử dụng vì mọi thứ trên internet vì chúng đều miễn phí",
+                    "B": "Chỉ sử dụng hình ảnh có chứa watermark (logo)",
+                    "C": "Kiểm tra giấy phép (license) của hình ảnh và ghi nguồn đầy đủ nếu cần",
+                    "D": "Tìm mọi cách chỉnh sửa lại hình ảnh trước khi sử dụng"
+                },
+                "correct": "C",
+                "explanation": "Kiểm tra giấy phép (license) của hình ảnh và ghi nguồn đầy đủ nếu cần"
+            }
+            ,
+            // Part 2.4
+            {
+                "id": "M2_91",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "\"Bản quyền số\" (Digital Copyright) bảo vệ điều gì?",
+                "options": {
+                    "A": "Quyền riêng tư của người dùng",
+                    "B": "Quyền sở hữu trí tuệ đối với các sản phẩm sáng tạo trong môi trường số",
+                    "C": "Quyền truy cập internet miễn phí",
+                    "D": "Quyền tự do ngôn luận"
+                },
+                "correct": "B",
+                "explanation": "Quyền sở hữu trí tuệ đối với các sản phẩm sáng tạo trong môi trường số"
+            },
+            {
+                "id": "M2_92",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Hành vi nào sau đây vi phạm bản quyền số?",
+                "options": {
+                    "A": "Chia sẻ đường link bài báo gốc",
+                    "B": "Trích dẫn một đoạn ngắn và ghi rõ nguồn",
+                    "C": "Sao chép toàn bộ nội dung website khác và đăng lên website của mình như là của mình",
+                    "D": "Mua bản quyền phần mềm và cài đặt trên máy tính cá nhân"
+                },
+                "correct": "C",
+                "explanation": "Sao chép toàn bộ nội dung website khác và đăng lên website của mình như là của mình"
+            },
+            {
+                "id": "M2_93",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "\"Creative Commons\" là gì?",
+                "options": {
+                    "A": "Một tổ chức bảo vệ quyền riêng tư",
+                    "B": "Một loại giấy phép cho phép tác giả chia sẻ tác phẩm của mình với cộng đồng với những điều kiện nhất định",
+                    "C": "Một phần mềm chỉnh sửa ảnh",
+                    "D": "Một mạng xã hội cho nghệ sĩ"
+                },
+                "correct": "B",
+                "explanation": "Một loại giấy phép cho phép tác giả chia sẻ tác phẩm của mình với cộng đồng với những điều kiện nhất định"
+            },
+            {
+                "id": "M2_94",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Khi sử dụng một phần mềm \"Mã nguồn mở\" (Open Source), bạn có quyền gì?",
+                "options": {
+                    "A": "Xem, sửa đổi và phân phối lại mã nguồn theo giấy phép quy định",
+                    "B": "Chỉ được sử dụng, không được xem mã nguồn",
+                    "C": "Sở hữu hoàn toàn phần mềm đó",
+                    "D": "Bán lại phần mềm với giá cao mà không cần ghi nguồn"
+                },
+                "correct": "A",
+                "explanation": "Xem, sửa đổi và phân phối lại mã nguồn theo giấy phép quy định"
+            },
+            {
+                "id": "M2_95",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "\"Đạo văn\" (Plagiarism) trong môi trường số là gì?",
+                "options": {
+                    "A": "Viết sai chính tả",
+                    "B": "Sử dụng hình ảnh chất lượng thấp",
+                    "C": "Sử dụng ý tưởng, câu văn, sản phẩm của người khác mà không ghi nguồn, coi đó là của mình",
+                    "D": "Dịch một bài viết từ tiếng nước ngoài sang tiếng Việt và ghi rõ nguồn"
+                },
+                "correct": "C",
+                "explanation": "Sử dụng ý tưởng, câu văn, sản phẩm của người khác mà không ghi nguồn, coi đó là của mình"
+            },
+            {
+                "id": "M2_96",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Để tránh đạo văn khi sử dụng thông tin từ internet, bạn cần làm gì?",
+                "options": {
+                    "A": "Thay đổi vài từ trong câu là đủ",
+                    "B": "Trích dẫn đầy đủ và ghi rõ nguồn gốc thông tin",
+                    "C": "Chỉ sử dụng thông tin từ các trang web nước ngoài",
+                    "D": "Không bao giờ sử dụng thông tin từ internet"
+                },
+                "correct": "B",
+                "explanation": "Trích dẫn đầy đủ và ghi rõ nguồn gốc thông tin"
+            },
+            {
+                "id": "M2_97",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "\"Fair Use\" (Sử dụng hợp lý) cho phép sử dụng tài liệu có bản quyền trong trường hợp nào?",
+                "options": {
+                    "A": "Sử dụng cho mục đích thương mại kiếm lời",
+                    "B": "Sao chép toàn bộ tác phẩm để bán rẻ hơn",
+                    "C": "Sử dụng mà không cần xin phép trong mọi trường hợp",
+                    "D": "Sử dụng cho mục đích phê bình, bình luận, đưa tin, giảng dạy, học tập hoặc nghiên cứu (với giới hạn nhất định)"
+                },
+                "correct": "D",
+                "explanation": "Sử dụng cho mục đích phê bình, bình luận, đưa tin, giảng dạy, học tập hoặc nghiên cứu (với giới hạn nhất định)"
+            },
+            {
+                "id": "M2_98",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Khi bạn tạo ra một nội dung số (bài viết, video), bản quyền thuộc về ai?",
+                "options": {
+                    "A": "Thuộc về bạn (tác giả) ngay khi tác phẩm được định hình",
+                    "B": "Thuộc về nhà cung cấp dịch vụ internet",
+                    "C": "Thuộc về công chúng",
+                    "D": "Chỉ thuộc về bạn khi bạn đi đăng ký bản quyền"
+                },
+                "correct": "A",
+                "explanation": "Thuộc về bạn (tác giả) ngay khi tác phẩm được định hình"
+            },
+            {
+                "id": "M2_99",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Hành vi nào sau đây tôn trọng quyền sở hữu trí tuệ?",
+                "options": {
+                    "A": "Tải phim lậu về xem",
+                    "B": "Sử dụng phần mềm bẻ khóa (crack)",
+                    "C": "Mua nhạc, phim, phần mềm từ các nguồn chính thống",
+                    "D": "Photo sách giáo khoa để bán"
+                },
+                "correct": "C",
+                "explanation": "Mua nhạc, phim, phần mềm từ các nguồn chính thống"
+            },
+            {
+                "id": "M2_100",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Tại sao cần bảo vệ bản quyền số?",
+                "options": {
+                    "A": "Để làm giàu cho các công ty luật",
+                    "B": "Để khuyến khích sự sáng tạo và bảo vệ quyền lợi của người sáng tạo",
+                    "C": "Để hạn chế người dùng tiếp cận thông tin",
+                    "D": "Để kiểm soát internet"
+                },
+                "correct": "B",
+                "explanation": "Để khuyến khích sự sáng tạo và bảo vệ quyền lợi của người sáng tạo"
+            },
+            {
+                "id": "M2_101",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "\"Dấu chân số\" (Digital Footprint) là gì?",
+                "options": {
+                    "A": "Dấu vân tay dùng để mở khóa điện thoại",
+                    "B": "Dấu vết dữ liệu bạn để lại khi sử dụng internet",
+                    "C": "Lịch sử vị trí trên bản đồ giấy",
+                    "D": "Một loại virus máy tính"
+                },
+                "correct": "B",
+                "explanation": "Dấu vết dữ liệu bạn để lại khi sử dụng internet"
+            },
+            {
+                "id": "M2_102",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Hành động nào sau đây tạo ra dấu chân số \"chủ động\"?",
+                "options": {
+                    "A": "Đăng bài viết, hình ảnh lên Facebook, Instagram",
+                    "B": "Trang web thu thập địa chỉ IP của bạn",
+                    "C": "Trình duyệt lưu cookie",
+                    "D": "Máy chủ lưu lịch sử tìm kiếm"
+                },
+                "correct": "A",
+                "explanation": "Đăng bài viết, hình ảnh lên Facebook, Instagram"
+            },
+            {
+                "id": "M2_103",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Hành động nào sau đây tạo ra dấu chân số \"thụ động\"?",
+                "options": {
+                    "A": "Gửi email cho bạn bè",
+                    "B": "Viết blog cá nhân",
+                    "C": "Các trang web theo dõi hành vi duyệt web của bạn mà bạn không biết",
+                    "D": "Bình luận trên YouTube"
+                },
+                "correct": "C",
+                "explanation": "Các trang web theo dõi hành vi duyệt web của bạn mà bạn không biết"
+            },
+            {
+                "id": "M2_104",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Tại sao việc quản lý dấu chân số lại quan trọng?",
+                "options": {
+                    "A": "Nó không quan trọng",
+                    "B": "Vì nó ảnh hưởng đến uy tín, danh tiếng và cơ hội nghề nghiệp của bạn",
+                    "C": "Chỉ quan trọng với người nổi tiếng",
+                    "D": "Để máy tính chạy nhanh hơn"
+                },
+                "correct": "B",
+                "explanation": "Vì nó ảnh hưởng đến uy tín, danh tiếng và cơ hội nghề nghiệp của bạn"
+            },
+            {
+                "id": "M2_105",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Để quản lý dấu chân số tích cực, bạn nên làm gì?",
+                "options": {
+                    "A": "Chia sẻ mọi thứ về cuộc sống cá nhân",
+                    "B": "Không bao giờ sử dụng internet",
+                    "C": "Sử dụng tên giả mạo khắp nơi",
+                    "D": "Suy nghĩ kỹ trước khi đăng tải (Think before you post) và kiểm tra cài đặt quyền riêng tư"
+                },
+                "correct": "D",
+                "explanation": "Suy nghĩ kỹ trước khi đăng tải (Think before you post) và kiểm tra cài đặt quyền riêng tư"
+            },
+            {
+                "id": "M2_106",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Thông tin nào sau đây KHÔNG nên chia sẻ công khai trên mạng xã hội?",
+                "options": {
+                    "A": "Sở thích cá nhân (như đọc sách, nghe nhạc)",
+                    "B": "Quan điểm về một bộ phim",
+                    "C": "Địa chỉ nhà riêng, số điện thoại cá nhân, số tài khoản ngân hàng",
+                    "D": "Hình ảnh phong cảnh du lịch"
+                },
+                "correct": "C",
+                "explanation": "Địa chỉ nhà riêng, số điện thoại cá nhân, số tài khoản ngân hàng"
+            },
+            {
+                "id": "M2_107",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Khi phát hiện thông tin sai lệch về bản thân trên mạng, bạn nên làm gì?",
+                "options": {
+                    "A": "Im lặng chịu đựng",
+                    "B": "Liên hệ với quản trị viên trang web yêu cầu gỡ bỏ hoặc đính chính",
+                    "C": "Thuê hacker tấn công trang web đó",
+                    "D": "Chửi bới người đăng tin"
+                },
+                "correct": "B",
+                "explanation": "Liên hệ với quản trị viên trang web yêu cầu gỡ bỏ hoặc đính chính"
+            },
+            {
+                "id": "M2_108",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "\"Quyền được lãng quên\" (Right to be Forgotten) liên quan đến điều gì?",
+                "options": {
+                    "A": "Quyền yêu cầu xóa bỏ các thông tin cá nhân không còn phù hợp hoặc gây ảnh hưởng xấu từ các kết quả tìm kiếm",
+                    "B": "Quyền được quên mật khẩu",
+                    "C": "Quyền không phải nhớ số điện thoại",
+                    "D": "Quyền xóa lịch sử trình duyệt"
+                },
+                "correct": "A",
+                "explanation": "Quyền yêu cầu xóa bỏ các thông tin cá nhân không còn phù hợp hoặc gây ảnh hưởng xấu từ các kết quả tìm kiếm"
+            },
+            {
+                "id": "M2_109",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Việc thường xuyên \"Google\" tên của chính mình giúp ích gì?",
+                "options": {
+                    "A": "Tăng lượt tìm kiếm cho bản thân",
+                    "B": "Không có tác dụng gì",
+                    "C": "Giúp bạn kiểm tra và quản lý những thông tin gì về bạn đang xuất hiện trên mạng",
+                    "D": "Làm chậm máy tính"
+                },
+                "correct": "C",
+                "explanation": "Giúp bạn kiểm tra và quản lý những thông tin gì về bạn đang xuất hiện trên mạng"
+            },
+            {
+                "id": "M2_110",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Dấu chân số có thể tồn tại trong bao lâu?",
+                "options": {
+                    "A": "24 giờ",
+                    "B": "1 tuần",
+                    "C": "1 năm",
+                    "D": "Gần như vĩnh viễn"
+                },
+                "correct": "D",
+                "explanation": "Gần như vĩnh viễn"
+            },
+            {
+                "id": "M2_111",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "\"Danh tính số\" (Digital Identity) là gì?",
+                "options": {
+                    "A": "Số chứng minh nhân dân",
+                    "B": "Tập hợp các thông tin về một cá nhân tồn tại trên môi trường số",
+                    "C": "Tên đăng nhập máy tính",
+                    "D": "Chữ ký điện tử"
+                },
+                "correct": "B",
+                "explanation": "Tập hợp các thông tin về một cá nhân tồn tại trên môi trường số"
+            },
+            {
+                "id": "M2_112",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Yếu tố nào sau đây góp phần xây dựng danh tính số tích cực?",
+                "options": {
+                    "A": "Chia sẻ kiến thức hữu ích, tham gia thảo luận văn minh",
+                    "B": "Thường xuyên than vãn, tiêu cực",
+                    "C": "Đăng ảnh tiệc tùng quá đà",
+                    "D": "Sử dụng ngôn ngữ thù ghét"
+                },
+                "correct": "A",
+                "explanation": "Chia sẻ kiến thức hữu ích, tham gia thảo luận văn minh"
+            },
+            {
+                "id": "M2_113",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Tại sao nhà tuyển dụng thường kiểm tra mạng xã hội của ứng viên?",
+                "options": {
+                    "A": "Để kết bạn",
+                    "B": "Để xem ứng viên có đẹp không",
+                    "C": "Để đánh giá tính cách, thái độ và sự chuyên nghiệp của ứng viên",
+                    "D": "Để tìm lý do từ chối"
+                },
+                "correct": "C",
+                "explanation": "Để đánh giá tính cách, thái độ và sự chuyên nghiệp của ứng viên"
+            },
+            {
+                "id": "M2_114",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Hành vi nào có thể gây hại đến danh tính số của bạn?",
+                "options": {
+                    "A": "Tham gia các khóa học trực tuyến",
+                    "B": "Bình luận khiếm nhã, gây tranh cãi trên các diễn đàn công cộng",
+                    "C": "Cập nhật hồ sơ LinkedIn thường xuyên",
+                    "D": "Viết blog chia sẻ kinh nghiệm làm việc"
+                },
+                "correct": "B",
+                "explanation": "Bình luận khiếm nhã, gây tranh cãi trên các diễn đàn công cộng"
+            },
+            {
+                "id": "M2_115",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Để bảo vệ danh tính số, bạn nên tránh làm gì?",
+                "options": {
+                    "A": "Sử dụng mật khẩu mạnh",
+                    "B": "Bật xác thực 2 yếu tố",
+                    "C": "Kiểm tra kỹ các cài đặt quyền riêng tư",
+                    "D": "Sử dụng chung một mật khẩu cho tất cả các tài khoản mạng xã hội"
+                },
+                "correct": "D",
+                "explanation": "Sử dụng chung một mật khẩu cho tất cả các tài khoản mạng xã hội"
+            },
+            {
+                "id": "M2_116",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "\"Thương hiệu cá nhân\" trực tuyến được xây dựng dựa trên điều gì?",
+                "options": {
+                    "A": "Giá trị, kỹ năng và hình ảnh mà bạn thể hiện nhất quán trên môi trường số",
+                    "B": "Số lượng người theo dõi ảo",
+                    "C": "Số tiền bạn chi cho quảng cáo",
+                    "D": "Việc bạn sao chép phong cách của người khác"
+                },
+                "correct": "A",
+                "explanation": "Giá trị, kỹ năng và hình ảnh mà bạn thể hiện nhất quán trên môi trường số"
+            },
+            {
+                "id": "M2_117",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Khi tham gia các cộng đồng trực tuyến chuyên môn (như LinkedIn), bạn nên làm gì?",
+                "options": {
+                    "A": "Chỉ đăng bài quảng cáo bán hàng",
+                    "B": "Kết nối, chia sẻ kiến thức và tương tác chuyên nghiệp với đồng nghiệp trong ngành",
+                    "C": "Spam tin nhắn cho người lạ",
+                    "D": "Đăng ảnh đi chơi cá nhân"
+                },
+                "correct": "B",
+                "explanation": "Kết nối, chia sẻ kiến thức và tương tác chuyên nghiệp với đồng nghiệp trong ngành"
+            },
+            {
+                "id": "M2_118",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Việc sử dụng biệt danh (nickname) thay vì tên thật trên mạng xã hội ảnh hưởng thế nào đến danh tính số?",
+                "options": {
+                    "A": "Luôn luôn tốt",
+                    "B": "Luôn luôn xấu",
+                    "C": "Tùy thuộc vào mục đích sử dụng, nhưng tên thật thường tạo độ tin cậy cao hơn trong môi trường chuyên nghiệp",
+                    "D": "Không ảnh hưởng gì"
+                },
+                "correct": "C",
+                "explanation": "Tùy thuộc vào mục đích sử dụng, nhưng tên thật thường tạo độ tin cậy cao hơn trong môi trường chuyên nghiệp"
+            },
+            {
+                "id": "M2_119",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Một danh tính số thiếu nhất quán (lúc thì chuyên nghiệp, lúc thì thô lỗ) sẽ dẫn đến điều gì?",
+                "options": {
+                    "A": "Người khác thấy bạn thú vị",
+                    "B": "Gây nhầm lẫn và mất lòng tin ở người khác",
+                    "C": "Tăng cơ hội nghề nghiệp",
+                    "D": "Được nhiều like hơn"
+                },
+                "correct": "B",
+                "explanation": "Gây nhầm lẫn và mất lòng tin ở người khác"
+            },
+            {
+                "id": "M2_120",
+                "module": "Module 2. Giao tiếp và hợp tác trong môi trường số",
+                "part": "Phần 2.4",
+                "question": "Để duy trì danh tính số an toàn và chuyên nghiệp, bạn cần thực hiện điều gì thường xuyên?",
+                "options": {
+                    "A": "Rà soát lại các bài đăng cũ và điều chỉnh nếu cần thiết",
+                    "B": "Xóa tài khoản và lập lại mới mỗi tháng",
+                    "C": "Thay đổi ảnh đại diện hàng ngày",
+                    "D": "Kết bạn với tất cả mọi người không chọn lọc"
+                },
+                "correct": "A",
+                "explanation": "Rà soát lại các bài đăng cũ và điều chỉnh nếu cần thiết"
+            }
+        ];
+    </script>
+
+    <!-- App Logic Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // State
+            let currentModuleData = [];
+            let currentPartData = [];
+            let currentQuestionIndex = 0; // Index within currentPartData
+            let selectedOption = null;
+            let isAnswered = false;
+            let currentPartName = "";
+
+            // Track answers: { questionId: 'correct' | 'incorrect' }
+            const answerState = {};
+
+            // DOM Elements
+            const moduleSelectionScreen = document.getElementById('module-selection');
+            const quizScreen = document.getElementById('quiz-screen');
+            const moduleGrid = document.querySelector('.module-grid');
+            const backBtn = document.getElementById('back-btn');
+
+            const partList = document.getElementById('part-list');
+            const calendarGrid = document.getElementById('calendar-grid');
+
+            const questionText = document.getElementById('question-text');
+            const optionsContainer = document.getElementById('options-container');
+            const checkBtn = document.getElementById('check-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const feedbackArea = document.getElementById('feedback-area');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackExplanation = document.getElementById('feedback-explanation');
+
+            // Initialize
+            init();
+
+            function init() {
+                assignParts(); // Fallback to assign parts if missing
+                loadModules();
+                setupEventListeners();
+            }
+
+            function assignParts() {
+                if (typeof quizData === 'undefined') return;
+
+                // If 'part' field is missing, assign based on index ranges (matching CSV structure)
+                // 1-30: Part 1.1
+                // 31-60: Part 1.2
+                // 61-90: Part 1.3
+                // 91-120: Part 1.4
+
+                quizData.forEach((q, index) => {
+                    if (!q.part) {
+                        if (index < 30) q.part = "Phần 1.1";
+                        else if (index < 60) q.part = "Phần 1.2";
+                        else if (index < 90) q.part = "Phần 1.3";
+                        else q.part = "Phần 1.4";
+                    }
+                });
+            }
+
+            function loadModules() {
+                // Group data by module
+                const modules = {};
+                if (typeof quizData !== 'undefined') {
+                    quizData.forEach(q => {
+                        if (!modules[q.module]) {
+                            modules[q.module] = [];
+                        }
+                        modules[q.module].push(q);
+                    });
+                } else {
+                    console.error("quizData is not defined.");
+                    moduleGrid.innerHTML = "<p>Lỗi: Không tìm thấy dữ liệu câu hỏi.</p>";
+                    return;
+                }
+
+                // Create module cards
+                moduleGrid.innerHTML = '';
+                Object.keys(modules).forEach(moduleName => {
+                    const card = document.createElement('div');
+                    card.className = 'module-card';
+                    card.innerHTML = `
+                        <h3>${moduleName}</h3>
+                        <p>${modules[moduleName].length} câu hỏi</p>
+                    `;
+                    card.addEventListener('click', () => startModule(modules[moduleName]));
+                    moduleGrid.appendChild(card);
+                });
+            }
+
+            function setupEventListeners() {
+                backBtn.addEventListener('click', () => {
+                    showScreen(moduleSelectionScreen);
+                });
+
+                checkBtn.addEventListener('click', checkAnswer);
+                nextBtn.addEventListener('click', nextQuestion);
+            }
+
+            function showScreen(screen) {
+                document.querySelectorAll('.screen').forEach(s => {
+                    s.classList.add('hidden');
+                    s.classList.remove('active');
+                });
+                screen.classList.remove('hidden');
+                screen.classList.add('active');
+            }
+
+            function startModule(data) {
+                currentModuleData = data;
+                showScreen(quizScreen);
+
+                // Extract parts
+                const parts = [...new Set(data.map(q => q.part))].sort();
+                renderParts(parts);
+
+                // Select first part by default
+                if (parts.length > 0) {
+                    selectPart(parts[0]);
+                }
+            }
+
+            function renderParts(parts) {
+                partList.innerHTML = '';
+                parts.forEach(part => {
+                    const el = document.createElement('div');
+                    el.className = 'part-item';
+                    el.textContent = part;
+                    el.dataset.part = part;
+                    el.addEventListener('click', () => selectPart(part));
+                    partList.appendChild(el);
+                });
+            }
+
+            function selectPart(partName) {
+                currentPartName = partName;
+                currentPartData = currentModuleData.filter(q => q.part === partName);
+                currentQuestionIndex = 0;
+
+                // Update UI active state
+                document.querySelectorAll('.part-item').forEach(el => {
+                    if (el.dataset.part === partName) el.classList.add('active');
+                    else el.classList.remove('active');
+                });
+
+                renderCalendar();
+                loadQuestion();
+            }
+
+            function renderCalendar() {
+                calendarGrid.innerHTML = '';
+                currentPartData.forEach((q, index) => {
+                    const el = document.createElement('div');
+                    el.className = 'calendar-item';
+                    el.textContent = index + 1;
+                    el.dataset.index = index;
+
+                    // Check state
+                    if (answerState[q.id] === 'correct') el.classList.add('correct');
+                    else if (answerState[q.id] === 'incorrect') el.classList.add('incorrect');
+
+                    el.addEventListener('click', () => {
+                        currentQuestionIndex = index;
+                        loadQuestion();
+                    });
+                    calendarGrid.appendChild(el);
+                });
+            }
+
+            function loadQuestion() {
+                const question = currentPartData[currentQuestionIndex];
+                isAnswered = !!answerState[question.id]; // Check if already answered
+                selectedOption = null;
+
+                // Update Calendar Active State
+                document.querySelectorAll('.calendar-item').forEach(el => {
+                    if (parseInt(el.dataset.index) === currentQuestionIndex) el.classList.add('active');
+                    else el.classList.remove('active');
+                });
+
+                // Reset UI
+                if (isAnswered && answerState[question.id] === 'correct') {
+                    checkBtn.classList.add('hidden');
+                    nextBtn.classList.remove('hidden');
+                    feedbackArea.classList.remove('hidden');
+                    feedbackArea.className = 'feedback-area correct';
+                    feedbackTitle.textContent = "Đã trả lời đúng";
+                    feedbackExplanation.textContent = question.explanation;
+                } else {
+                    checkBtn.disabled = true;
+                    checkBtn.classList.remove('hidden');
+                    nextBtn.classList.add('hidden');
+                    feedbackArea.classList.add('hidden');
+                }
+
+                // Set Content
+                questionText.textContent = question.question;
+
+                // Render Options
+                optionsContainer.innerHTML = '';
+                const options = ['A', 'B', 'C', 'D'];
+                options.forEach(optKey => {
+                    const optText = question.options[optKey];
+                    if (optText) {
+                        const el = document.createElement('div');
+                        el.className = 'option-item';
+                        el.dataset.key = optKey;
+                        el.innerHTML = `
+                            <div class="option-marker">${optKey}</div>
+                            <div class="option-text">${optText}</div>
+                        `;
+
+                        // If already answered correctly, show state
+                        if (isAnswered && answerState[question.id] === 'correct') {
+                            el.classList.add('disabled');
+                            if (optKey === question.correct) el.classList.add('correct');
+                        } else {
+                            el.addEventListener('click', () => selectOption(el, optKey));
+                        }
+
+                        optionsContainer.appendChild(el);
+                    }
+                });
+            }
+
+            function selectOption(el, key) {
+                if (isAnswered && answerState[currentPartData[currentQuestionIndex].id] === 'correct') return;
+
+                // Remove selected class from all
+                document.querySelectorAll('.option-item').forEach(item => item.classList.remove('selected'));
+
+                // Add selected to clicked
+                el.classList.add('selected');
+                selectedOption = key;
+                checkBtn.disabled = false;
+            }
+
+            function checkAnswer() {
+                if (!selectedOption) return;
+
+                const question = currentPartData[currentQuestionIndex];
+                const isCorrect = selectedOption === question.correct;
+                const selectedEl = document.querySelector(`.option-item[data-key="${selectedOption}"]`);
+
+                if (isCorrect) {
+                    // Correct
+                    isAnswered = true;
+                    answerState[question.id] = 'correct';
+
+                    selectedEl.classList.add('correct');
+                    selectedEl.classList.remove('selected');
+
+                    // Show Feedback
+                    feedbackArea.classList.remove('hidden');
+                    feedbackArea.className = 'feedback-area correct';
+                    feedbackTitle.textContent = "Chính xác!";
+                    feedbackExplanation.textContent = question.explanation || "Bạn đã trả lời đúng.";
+
+                    // Switch buttons
+                    checkBtn.classList.add('hidden');
+                    nextBtn.classList.remove('hidden');
+
+                    // Disable all options
+                    document.querySelectorAll('.option-item').forEach(item => item.classList.add('disabled'));
+
+                    // Update Calendar
+                    renderCalendar();
+
+                } else {
+                    // Incorrect
+                    answerState[question.id] = 'incorrect';
+
+                    selectedEl.classList.add('incorrect');
+                    selectedEl.classList.remove('selected');
+
+                    // Show Feedback
+                    feedbackArea.classList.remove('hidden');
+                    feedbackArea.className = 'feedback-area incorrect';
+                    feedbackTitle.textContent = "Chưa chính xác";
+                    feedbackExplanation.textContent = "Hãy thử chọn lại đáp án khác.";
+
+                    selectedOption = null;
+                    checkBtn.disabled = true;
+
+                    // Update Calendar
+                    renderCalendar();
+                }
+            }
+
+            function nextQuestion() {
+                if (currentQuestionIndex < currentPartData.length - 1) {
+                    currentQuestionIndex++;
+                    loadQuestion();
+                } else {
+                    alert("Bạn đã hoàn thành phần này!");
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
